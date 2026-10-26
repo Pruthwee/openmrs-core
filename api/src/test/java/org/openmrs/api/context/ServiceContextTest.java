@@ -12,6 +12,9 @@ package org.openmrs.api.context;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -140,7 +143,8 @@ public class ServiceContextTest extends BaseContextSensitiveTest {
 
 		serviceContext.startRefreshingContext();
 
-		Thread lookup = new Thread(() -> {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.submit(() -> {
 			try {
 				retrievedService.set(serviceContext.getService(PatientService.class));
 			} catch (Throwable t) {
@@ -149,7 +153,6 @@ public class ServiceContextTest extends BaseContextSensitiveTest {
 				lookupComplete.countDown();
 			}
 		});
-		lookup.start();
 
 		try {
 			// the lookup must not complete while the refresh is in progress; a broken (non-blocking)
@@ -174,7 +177,8 @@ public class ServiceContextTest extends BaseContextSensitiveTest {
 		AtomicReference<Throwable> thrown = new AtomicReference<>();
 		CountDownLatch readerRunning = new CountDownLatch(1);
 
-		Thread reader = new Thread(() -> {
+		ExecutorService readerExecutor = Executors.newSingleThreadExecutor();
+		Future<?> readerFuture = readerExecutor.submit(() -> {
 			readerRunning.countDown();
 			long deadline = System.currentTimeMillis() + 5000;
 			while (System.currentTimeMillis() < deadline) {
@@ -189,12 +193,12 @@ public class ServiceContextTest extends BaseContextSensitiveTest {
 				}
 			}
 		});
-		reader.start();
 
 		assertTrue(readerRunning.await(5, TimeUnit.SECONDS));
 		serviceContext.setService(RegistryVisibilityService.class, new RegistryVisibilityServiceImpl());
 
-		reader.join(5000);
+		readerFuture.get(5, TimeUnit.SECONDS);
+		readerExecutor.shutdown();
 
 		assertNull(thrown.get());
 		assertNotNull(retrievedService.get());

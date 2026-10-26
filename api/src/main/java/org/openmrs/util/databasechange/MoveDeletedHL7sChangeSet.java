@@ -12,6 +12,7 @@ package org.openmrs.util.databasechange;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.openmrs.hl7.HL7Constants;
 
@@ -49,15 +50,14 @@ public class MoveDeletedHL7sChangeSet implements CustomTaskChange {
 		insertHL7Sql.append(HL7Constants.HL7_STATUS_DELETED);
 		insertHL7Sql.append(")");
 
-		PreparedStatement insertStatement;
-		PreparedStatement deleteStatement;
-
-		try {
-			insertStatement = connection.prepareStatement(insertHL7Sql.toString());
-			deleteStatement = connection.prepareStatement("DELETE FROM hl7_in_archive WHERE hl7_in_archive_id=?");
+		try (PreparedStatement insertStatement = connection.prepareStatement(insertHL7Sql.toString());
+		        PreparedStatement deleteStatement = connection
+		                .prepareStatement("DELETE FROM hl7_in_archive WHERE hl7_in_archive_id=?");
+		        Statement selectStatement = connection.createStatement();
+		        ResultSet archives = selectStatement.executeQuery(getDeletedHL7sSql.toString())) {
+			selectStatement.setQueryTimeout(30);
 
 			// iterate over deleted HL7s
-			ResultSet archives = connection.createStatement().executeQuery(getDeletedHL7sSql.toString());
 			while (archives.next()) {
 
 				// add to the queue
@@ -71,14 +71,6 @@ public class MoveDeletedHL7sChangeSet implements CustomTaskChange {
 				// remove from the archives
 				deleteStatement.setInt(1, archives.getInt(6));
 				deleteStatement.executeUpdate();
-			}
-
-			// cleanup
-			if (insertStatement != null) {
-				insertStatement.close();
-			}
-			if (deleteStatement != null) {
-				deleteStatement.close();
 			}
 
 		} catch (SQLException | DatabaseException e) {

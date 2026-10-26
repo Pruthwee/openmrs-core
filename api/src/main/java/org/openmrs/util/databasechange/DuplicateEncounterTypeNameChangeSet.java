@@ -13,7 +13,6 @@ import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,9 +72,6 @@ public class DuplicateEncounterTypeNameChangeSet implements CustomTaskChange {
 	public void execute(Database database) throws CustomChangeException {
 		JdbcConnection connection = (JdbcConnection) database.getConnection();
 		Map<String, HashSet<Integer>> duplicates = new HashMap<>();
-		Statement stmt = null;
-		PreparedStatement pStmt = null;
-		ResultSet rs = null;
 		Boolean initialAutoCommit = null;
 
 		try {
@@ -84,61 +80,65 @@ public class DuplicateEncounterTypeNameChangeSet implements CustomTaskChange {
 			// set auto commit mode to false for UPDATE action
 			connection.setAutoCommit(false);
 
-			stmt = connection.createStatement();
-			rs = stmt.executeQuery(
-			    "SELECT * FROM encounter_type INNER JOIN (SELECT name FROM encounter_type GROUP BY name HAVING count(name) > 1) dup ON encounter_type.name = dup.name");
+			try (Statement stmt = connection.createStatement();
+			        ResultSet rs = stmt.executeQuery(
+			            "SELECT * FROM encounter_type INNER JOIN (SELECT name FROM encounter_type GROUP BY name HAVING count(name) > 1) dup ON encounter_type.name = dup.name")) {
+				stmt.setQueryTimeout(30);
 
-			Integer id;
-			String name;
+				Integer id;
+				String name;
 
-			while (rs.next()) {
-				id = rs.getInt("encounter_type_id");
-				name = rs.getString("name");
+				while (rs.next()) {
+					id = rs.getInt("encounter_type_id");
+					name = rs.getString("name");
 
-				if (duplicates.get(name) == null) {
-					HashSet<Integer> results = new HashSet<>();
-					results.add(id);
-					duplicates.put(name, results);
-				} else {
-					HashSet<Integer> results = duplicates.get(name);
-					results.add(id);
+					if (duplicates.get(name) == null) {
+						HashSet<Integer> results = new HashSet<>();
+						results.add(id);
+						duplicates.put(name, results);
+					} else {
+						HashSet<Integer> results = duplicates.get(name);
+						results.add(id);
+					}
 				}
-			}
 
-			for (Object o : duplicates.entrySet()) {
-				Map.Entry pairs = (Map.Entry) o;
+				for (Object o : duplicates.entrySet()) {
+					Map.Entry pairs = (Map.Entry) o;
 
-				HashSet<Integer> values = (HashSet<Integer>) pairs.getValue();
-				List<Integer> ids = new ArrayList<Integer>(values);
+					HashSet<Integer> values = (HashSet<Integer>) pairs.getValue();
+					List<Integer> ids = new ArrayList<Integer>(values);
 
-				int duplicateNameId = 1;
-				for (int i = 1; i < ids.size(); i++) {
-					String newName = pairs.getKey() + "_" + duplicateNameId;
+					int duplicateNameId = 1;
+					for (int i = 1; i < ids.size(); i++) {
+						String newName = pairs.getKey() + "_" + duplicateNameId;
 
-					List<List<Object>> duplicateResult;
-					boolean duplicateName;
-					Connection con = DatabaseUpdater.getConnection();
+						List<List<Object>> duplicateResult;
+						boolean duplicateName;
+						Connection con = DatabaseUpdater.getPooledConnection();
 
-					do {
-						String sqlValidatorString = "select * from encounter_type where name = '" + newName + "'";
-						duplicateResult = DatabaseUtil.executeSQL(con, sqlValidatorString, true);
+						do {
+							String sqlValidatorString = "select * from encounter_type where name = '" + newName + "'";
+							duplicateResult = DatabaseUtil.executeSQL(con, sqlValidatorString, true);
 
-						if (!duplicateResult.isEmpty()) {
+							if (!duplicateResult.isEmpty()) {
+								duplicateNameId += 1;
+								newName = pairs.getKey() + "_" + duplicateNameId;
+								duplicateName = true;
+							} else {
+								duplicateName = false;
+							}
+						} while (duplicateName);
+
+						try (PreparedStatement pStmt = connection
+						        .prepareStatement("update encounter_type set name = ? where encounter_type_id = ?")) {
+							pStmt.setString(1, newName);
+							pStmt.setInt(2, ids.get(i));
+
 							duplicateNameId += 1;
-							newName = pairs.getKey() + "_" + duplicateNameId;
-							duplicateName = true;
-						} else {
-							duplicateName = false;
+
+							pStmt.executeUpdate();
 						}
-					} while (duplicateName);
-
-					pStmt = connection.prepareStatement("update encounter_type set name = ? where encounter_type_id = ?");
-					pStmt.setString(1, newName);
-					pStmt.setInt(2, ids.get(i));
-
-					duplicateNameId += 1;
-
-					pStmt.executeUpdate();
+					}
 				}
 			}
 		} catch (BatchUpdateException e) {
@@ -164,31 +164,7 @@ public class DuplicateEncounterTypeNameChangeSet implements CustomTaskChange {
 			} catch (DatabaseException e) {
 				log.warn("Failed to set auto commit to ids initial state", e);
 			}
-			if (rs != null) {
-				try {
-					rs.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the resultset object");
-				}
-			}
-
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the select statement used to identify duplicate EncounterType object names");
-				}
-			}
-
-			if (pStmt != null) {
-				try {
-					pStmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the prepared statement used to update duplicate EncounterType object names");
-				}
-			}
 		}
 
 	}
-
 }

@@ -13,12 +13,14 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import javax.swing.JFileChooser;
 
 import org.dbunit.database.DatabaseConnection;
@@ -104,19 +106,21 @@ public class MigrateDataSet {
 			// the straight-up database connection
 			String url = "jdbc:mysql://localhost/" + tempDatabaseName;
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection con = DriverManager.getConnection(url, credentials[0], credentials[1]);
+			Connection con = null;
+			PreparedStatement ps = null;
+			FileOutputStream fos = null;
+			try {
+				con = DriverManager.getConnection(url, credentials[0], credentials[1]);
+				IDatabaseConnection dbunitConnection = new DatabaseConnection(con);
 
-			// database connection for dbunit
-			IDatabaseConnection dbunitConnection = new DatabaseConnection(con);
+				try (InputStream fileOrDirectoryStream = new FileInputStream(fileOrDirectory)) {
+					ps = con.prepareStatement("SET FOREIGN_KEY_CHECKS=0;");
+					ps.execute();
 
-			try (InputStream fileOrDirectoryStream = new FileInputStream(fileOrDirectory)) {
-				PreparedStatement ps = con.prepareStatement("SET FOREIGN_KEY_CHECKS=0;");
-				ps.execute();
-				ps.close();
+					IDataSet dataset = new FlatXmlDataSet(fileOrDirectoryStream);
 
-				IDataSet dataset = new FlatXmlDataSet(fileOrDirectoryStream);
-
-				DatabaseOperation.REFRESH.execute(dbunitConnection, dataset);
+					DatabaseOperation.REFRESH.execute(dbunitConnection, dataset);
+				}
 
 				//turn off foreign key checks here too.
 				System.out.println(execMysqlCmd("SET FOREIGN_KEY_CHECKS=0", NEW_UPDATE_FILE, true));
@@ -124,15 +128,30 @@ public class MigrateDataSet {
 				System.out.println("Dumping new xml file");
 
 				// get a new connection so dbunit knows the right column headers
-				dbunitConnection = new DatabaseConnection(con);
+				IDatabaseConnection dbunitConnection2 = new DatabaseConnection(con);
 
 				// full database export that will ignore empty tables
-				FlatXmlWriter datasetWriter = new FlatXmlWriter(new FileOutputStream(fileOrDirectory));
-				datasetWriter.write(dbunitConnection.createDataSet());
+				fos = new FileOutputStream(fileOrDirectory);
+				FlatXmlWriter datasetWriter = new FlatXmlWriter(fos);
+				datasetWriter.write(dbunitConnection2.createDataSet());
 			} catch (Exception e) {
 				System.err.println("Unable to convert: " + filename + " Error: " + e.getMessage());
 			} finally {
-				dbunitConnection = null;
+				if (ps != null) {
+					try {
+						ps.close();
+					} catch (SQLException e) { /* ignore */ }
+				}
+				if (fos != null) {
+					try {
+						fos.close();
+					} catch (IOException e) { /* ignore */ }
+				}
+				if (con != null) {
+					try {
+						con.close();
+					} catch (SQLException e) { /* ignore */ }
+				}
 			}
 
 			System.out.println("Finished!");

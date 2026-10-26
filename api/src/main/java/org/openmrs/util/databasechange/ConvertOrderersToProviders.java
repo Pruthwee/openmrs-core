@@ -55,14 +55,15 @@ public class ConvertOrderersToProviders implements CustomTaskChange {
 	        throws CustomChangeException, SQLException, DatabaseException {
 		final int batchSize = 1000;
 		int index = 0;
-		PreparedStatement updateStatement = null;
-		Statement statement = connection.createStatement();
 		Boolean autoCommit = null;
-		try {
+		try (Statement statement = connection.createStatement();
+		        PreparedStatement updateStatement = connection
+		                .prepareStatement("UPDATE orders SET orderer = ? WHERE orderer = ?")) {
+			statement.setQueryTimeout(30);
+			updateStatement.setQueryTimeout(30);
 			autoCommit = connection.getAutoCommit();
 			connection.setAutoCommit(false);
 
-			updateStatement = connection.prepareStatement("UPDATE orders SET orderer = ? WHERE orderer = ?");
 			boolean supportsBatchUpdate = connection.getMetaData().supportsBatchUpdates();
 			for (List<Object> row : usersAndProviders) {
 				updateStatement.setInt(1, (Integer) row.get(1));
@@ -93,12 +94,6 @@ public class ConvertOrderersToProviders implements CustomTaskChange {
 		} finally {
 			if (autoCommit != null) {
 				connection.setAutoCommit(autoCommit);
-			}
-			if (updateStatement != null) {
-				updateStatement.close();
-			}
-			if (statement != null) {
-				statement.close();
 			}
 		}
 	}

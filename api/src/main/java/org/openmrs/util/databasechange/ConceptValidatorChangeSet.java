@@ -437,11 +437,10 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 	private List<Integer> getAllUnretiredConceptIds(JdbcConnection connection) {
 
 		LinkedList<Integer> conceptIds = null;
-		Statement stmt = null;
 
-		try {
-			stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery("SELECT concept_id FROM concept WHERE retired = false");
+		try (Statement stmt = connection.createStatement();
+		        ResultSet rs = stmt.executeQuery("SELECT concept_id FROM concept WHERE retired = false")) {
+			stmt.setQueryTimeout(30);
 
 			while (rs.next()) {
 				if (conceptIds == null) {
@@ -452,14 +451,6 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 			}
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
 		}
 
 		return conceptIds;
@@ -496,14 +487,12 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 	 */
 	@SuppressWarnings("unchecked")
 	private List<Locale> getAllowedLocalesList(JdbcConnection connection) {
-		Statement stmt = null;
 		ListOrderedSet allowedLocales = new ListOrderedSet();
 
-		try {
-			//get the default locale
-			stmt = connection.createStatement();
-			ResultSet rsDefaultLocale = stmt.executeQuery("SELECT property_value FROM global_property WHERE property = '"
-			        + OpenmrsConstants.GLOBAL_PROPERTY_DEFAULT_LOCALE + "'");
+		try (Statement stmt = connection.createStatement();
+		        ResultSet rsDefaultLocale = stmt.executeQuery("SELECT property_value FROM global_property WHERE property = '"
+		                + OpenmrsConstants.GLOBAL_PROPERTY_DEFAULT_LOCALE + "'")) {
+			stmt.setQueryTimeout(30);
 
 			if (rsDefaultLocale.next()) {
 				String defaultLocaleStr = rsDefaultLocale.getString("property_value");
@@ -521,35 +510,29 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 			allowedLocales.add(defaultLocale);
 
 			//get the locale.allowed.list
-			ResultSet rsAllowedLocales = stmt.executeQuery("SELECT property_value FROM global_property WHERE property = '"
-			        + OpenmrsConstants.GLOBAL_PROPERTY_LOCALE_ALLOWED_LIST + "'");
+			try (ResultSet rsAllowedLocales = stmt
+			        .executeQuery("SELECT property_value FROM global_property WHERE property = '"
+			                + OpenmrsConstants.GLOBAL_PROPERTY_LOCALE_ALLOWED_LIST + "'")) {
 
-			if (rsAllowedLocales.next()) {
-				String allowedLocaleStr = rsAllowedLocales.getString("property_value");
-				if (!StringUtils.isBlank(allowedLocaleStr)) {
-					String[] localesArray = allowedLocaleStr.split(",");
-					for (String localeStr : localesArray) {
-						if (localeStr.trim().length() > 1) {
-							allowedLocales.add(LocaleUtility.fromSpecification(localeStr.trim()));
-						} else {
-							updateWarnings.add(
-							    "'" + localeStr + "' is an invalid value for the global property locale.allowed.list");
+				if (rsAllowedLocales.next()) {
+					String allowedLocaleStr = rsAllowedLocales.getString("property_value");
+					if (!StringUtils.isBlank(allowedLocaleStr)) {
+						String[] localesArray = allowedLocaleStr.split(",");
+						for (String localeStr : localesArray) {
+							if (localeStr.trim().length() > 1) {
+								allowedLocales.add(LocaleUtility.fromSpecification(localeStr.trim()));
+							} else {
+								updateWarnings.add(
+								    "'" + localeStr + "' is an invalid value for the global property locale.allowed.list");
+							}
 						}
 					}
+				} else {
+					log.warn("The global property '" + OpenmrsConstants.GLOBAL_PROPERTY_LOCALE_ALLOWED_LIST + "' isn't set");
 				}
-			} else {
-				log.warn("The global property '" + OpenmrsConstants.GLOBAL_PROPERTY_LOCALE_ALLOWED_LIST + "' isn't set");
 			}
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
 		}
 
 		//if it isn't among
@@ -569,14 +552,13 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 	 *         given conceptId
 	 */
 	private Map<Locale, List<ConceptName>> getLocaleConceptNamesMap(JdbcConnection connection, int conceptId) {
-		PreparedStatement pStmt = null;
 		Map<Locale, List<ConceptName>> localeConceptNamesMap = null;
 
-		try {
-			pStmt = connection.prepareStatement(
-			    "SELECT concept_name_id, name, concept_name_type, locale, locale_preferred FROM concept_name WHERE voided = false AND concept_id = ?");
+		try (PreparedStatement pStmt = connection.prepareStatement(
+		    "SELECT concept_name_id, name, concept_name_type, locale, locale_preferred FROM concept_name WHERE voided = false AND concept_id = ?");
+		        ResultSet rs = pStmt.executeQuery()) {
 			pStmt.setInt(1, conceptId);
-			ResultSet rs = pStmt.executeQuery();
+			pStmt.setQueryTimeout(30);
 
 			while (rs.next()) {
 				if (localeConceptNamesMap == null) {
@@ -612,14 +594,6 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 			}
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (pStmt != null) {
-				try {
-					pStmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the prepared statement object");
-				}
-			}
 		}
 
 		return localeConceptNamesMap;

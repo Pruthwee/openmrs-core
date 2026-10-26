@@ -554,11 +554,13 @@ public final class OpenmrsConstants {
 
 	public static final String ENCRYPTION_VECTOR_RUNTIME_PROPERTY = "encryption.vector";
 
-	public static final String ENCRYPTION_VECTOR_DEFAULT = "9wyBUNglFCRVSUhMfsTa3Q==";
-
 	public static final String ENCRYPTION_KEY_RUNTIME_PROPERTY = "encryption.key";
 
-	public static final String ENCRYPTION_KEY_DEFAULT = "dTfyELRrAICGDwzjHDjuhw==";
+	public static final String ENCRYPTION_KEY_SECRET_NAME = System.getenv()
+	        .getOrDefault("OPENMRS_ENCRYPTION_KEY_SECRET_NAME", "openmrs/encryption/key");
+
+	public static final String ENCRYPTION_VECTOR_SECRET_NAME = System.getenv()
+	        .getOrDefault("OPENMRS_ENCRYPTION_VECTOR_SECRET_NAME", "openmrs/encryption/vector");
 
 	/**
 	 * Global property name for the visit type(s) to automatically close

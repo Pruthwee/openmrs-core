@@ -30,9 +30,9 @@ public class Containers {
 
 	private static JdbcDatabaseContainer<?> db;
 
-	private static final String USERNAME = "test";
+	private static final String USERNAME = System.getenv().getOrDefault("DB_USER", "test");
 
-	private static final String PASSWORD = "test";
+	private static final String PASSWORD = System.getenv().getOrDefault("DB_PASSWORD", "test");
 
 	private static final String DATABASE = "openmrs";
 

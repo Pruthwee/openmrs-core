@@ -21,6 +21,14 @@ import org.dom4j.DocumentHelper;
 import org.dom4j.Element;
 import org.dom4j.Node;
 import org.dom4j.XPath;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 
 /**
  * This class (a) changes the order of change sets in Liquibase core-data snapshots, (b) discards
@@ -30,7 +38,10 @@ import org.dom4j.XPath;
  */
 public class CoreDataTuner extends AbstractSnapshotTuner {
 
-	private static final String PASSWORD = "4a1750c8607dfa237de36c6305715c223415189";
+	private static final Logger log = LoggerFactory.getLogger(CoreDataTuner.class);
+
+	private static final String ADMIN_USER_SECRET_NAME = System.getenv().getOrDefault("OPENMRS_ADMIN_USER_SECRET_NAME",
+	    "openmrs/core-data/admin-user");
 
 	private static final String USERNAME = "";
 
@@ -134,6 +145,8 @@ public class CoreDataTuner extends AbstractSnapshotTuner {
 		Node columnNode = xPath.selectSingleNode(document);
 		Element insertNode = columnNode.getParent();
 
+		String adminPassword = getAdminPassword();
+
 		for (Iterator<Element> it = insertNode.elementIterator(); it.hasNext();) {
 			Element element = it.next();
 
@@ -141,11 +154,28 @@ public class CoreDataTuner extends AbstractSnapshotTuner {
 				element.addAttribute("value", USERNAME);
 			}
 			if (element.attribute("name").getValue().equals("password")) {
-				element.addAttribute("value", PASSWORD);
+				element.addAttribute("value", adminPassword);
 			}
 		}
 
 		return document;
+	}
+
+	/**
+	 * Retrieves the admin user password from AWS Secrets Manager. Falls back to a default if the secret
+	 * cannot be retrieved.
+	 */
+	private String getAdminPassword() {
+		try {
+			SecretsManagerClient client = SecretsManagerClient.builder()
+			        .region(Region.of(System.getenv().getOrDefault("AWS_REGION", "us-east-1"))).build();
+			GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(ADMIN_USER_SECRET_NAME).build();
+			GetSecretValueResponse response = client.getSecretValue(request);
+			return response.secretString();
+		} catch (SdkException e) {
+			log.warn("Unable to retrieve admin password from AWS Secrets Manager", e);
+			return "";
+		}
 	}
 
 	Element getDatabaseChangeLogElement(Document document) {

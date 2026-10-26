@@ -11,6 +11,9 @@ package org.openmrs.logging;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -326,7 +329,8 @@ class MemoryAppenderTest {
 	 * buffer in the {@code BUFFERS} map is the mechanism that prevents the loss.
 	 */
 	@Test
-	void getBuffer_shouldNotLoseEventsDuringConcurrentReconfigurationOfSameSize() throws InterruptedException {
+	void getBuffer_shouldNotLoseEventsDuringConcurrentReconfigurationOfSameSize()
+	        throws InterruptedException, java.util.concurrent.ExecutionException, java.util.concurrent.TimeoutException {
 		String appenderName = "test-concurrent-reconfig-" + System.nanoTime();
 		int bufferSize = 2000;
 		int messageCount = 1000; // < bufferSize so no FIFO eviction confuses the count
@@ -345,7 +349,8 @@ class MemoryAppenderTest {
 			CountDownLatch producerStarted = new CountDownLatch(1);
 			CountDownLatch reconfigSignal = new CountDownLatch(1);
 
-			Thread producer = new Thread(() -> {
+			ExecutorService executor = Executors.newSingleThreadExecutor();
+			Future<?> producerFuture = executor.submit(() -> {
 				producerStarted.countDown();
 				for (int i = 0; i < messageCount; i++) {
 					concurrentLogger.warn(Integer.toString(i));
@@ -356,7 +361,6 @@ class MemoryAppenderTest {
 					}
 				}
 			});
-			producer.start();
 
 			assertThat("Producer should start", producerStarted.await(5, TimeUnit.SECONDS), equalTo(true));
 			assertThat("Producer should reach the reconfig signal", reconfigSignal.await(5, TimeUnit.SECONDS),
@@ -369,9 +373,10 @@ class MemoryAppenderTest {
 			        .setLayout(PatternLayout.newBuilder().withPattern("%m").build()).setBufferSize(bufferSize).build();
 			appender2.start();
 
-			producer.join(10_000);
-			assertThat("Producer should have finished", producer.isAlive(), equalTo(false));
+			producerFuture.get(10_000, TimeUnit.MILLISECONDS);
+			assertThat("Producer should have finished", producerFuture.isDone(), equalTo(true));
 			assertThat(sent.get(), equalTo(messageCount));
+			executor.shutdown();
 
 			try {
 				List<String> linesFromNew = appender2.getLogLines();

@@ -36,8 +36,8 @@ public class InitializationWizardModel {
 
 	public static final String INSTALL_METHOD_AUTO = "auto";
 
-	// Default OpenMRS admin password set by the simple installation.
-	public static final String ADMIN_DEFAULT_PASSWORD = "Admin123";
+	// Default OpenMRS admin password retrieved from AWS Secrets Manager
+	public static final String ADMIN_DEFAULT_PASSWORD = System.getenv().getOrDefault("OPENMRS_ADMIN_PASSWORD", "");
 
 	/**
 	 * Default database name to use unless user specifies another in the wizard or they are creating a

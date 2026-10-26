@@ -39,41 +39,23 @@ public class UpdateLayoutAddressFormatChangeSet implements CustomTaskChange {
 	@Override
 	public void execute(Database database) throws CustomChangeException {
 		JdbcConnection connection = (JdbcConnection) database.getConnection();
-		Statement stmt = null;
-		PreparedStatement pStmt = null;
-
-		try {
-			stmt = connection.createStatement();
-			ResultSet rs = stmt
-			        .executeQuery("SELECT property_value FROM global_property WHERE property = 'layout.address.format'");
+		try (Statement stmt = connection.createStatement();
+		        ResultSet rs = stmt.executeQuery(
+		            "SELECT property_value FROM global_property WHERE property = 'layout.address.format'")) {
+			stmt.setQueryTimeout(30);
 			if (rs.next()) {
 				String value = rs.getString("property_value");
 				value = value.replace("org.openmrs.layout.web.", "org.openmrs.layout.");
 
-				pStmt = connection.prepareStatement(
-				    "UPDATE global_property SET property_value = ? WHERE property = 'layout.address.format'");
-				pStmt.setString(1, value);
-				pStmt.addBatch();
-				pStmt.executeBatch();
+				try (PreparedStatement pStmt = connection.prepareStatement(
+				    "UPDATE global_property SET property_value = ? WHERE property = 'layout.address.format'")) {
+					pStmt.setString(1, value);
+					pStmt.addBatch();
+					pStmt.executeBatch();
+				}
 			}
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
-
-			if (pStmt != null) {
-				try {
-					pStmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the prepared statement object");
-				}
-			}
 		}
 	}
 

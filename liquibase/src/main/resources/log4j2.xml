@@ -19,6 +19,11 @@
 	</Appenders>
 	<Loggers>
 		<Logger name="org.openmrs.liquibase" level="INFO" />
+		<!-- AWS SDK logging: prevent secrets and wire data from being logged -->
+		<Logger name="software.amazon.awssdk" level="WARN" />
+		<Logger name="software.amazon.awssdk.request" level="WARN" />
+		<Logger name="org.apache.http.wire" level="WARN" />
+		<Logger name="org.apache.http.headers" level="WARN" />
 		<Root level="OFF">
 			<AppenderRef ref="CONSOLE" />
 		</Root>

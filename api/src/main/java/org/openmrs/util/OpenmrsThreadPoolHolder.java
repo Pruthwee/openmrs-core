@@ -10,9 +10,15 @@
 package org.openmrs.util;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class OpenmrsThreadPoolHolder {
 
-	public static final ExecutorService threadExecutor = Executors.newCachedThreadPool();
+	private static final int PROCESSORS = Runtime.getRuntime().availableProcessors();
+
+	public static final ExecutorService threadExecutor = new ThreadPoolExecutor(Math.max(1, PROCESSORS / 2),
+	        Math.max(2, PROCESSORS * 2), 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000),
+	        new ThreadPoolExecutor.CallerRunsPolicy());
 }

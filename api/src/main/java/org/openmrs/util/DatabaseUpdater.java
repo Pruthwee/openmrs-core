@@ -47,6 +47,9 @@ import org.openmrs.module.ModuleClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
 import liquibase.Contexts;
 import liquibase.GlobalConfiguration;
 import liquibase.LabelExpression;
@@ -494,6 +497,53 @@ public class DatabaseUpdater {
 
 		Class.forName(driver);
 		return DriverManager.getConnection(url, username, password);
+	}
+
+	/**
+	 * Gets a database connection using HikariCP connection pooling for optimized connection management
+	 * in cloud environments.
+	 *
+	 * @return a pooled java.sql.Connection based on the current runtime properties
+	 */
+	public static Connection getPooledConnection() throws Exception {
+		Properties props = Context.getRuntimeProperties();
+		mergeDefaultRuntimeProperties(props);
+
+		String driver = props.getProperty("hibernate.connection.driver_class");
+		String username = props.getProperty("hibernate.connection.username");
+		String password = props.getProperty("hibernate.connection.password");
+		String url = props.getProperty("hibernate.connection.url");
+
+		// hack for mysql to make sure innodb tables are created
+		if ((url.contains("jdbc:mysql") || url.contains("jdbc:mariadb")) && !url.contains("InnoDB")) {
+			url = url + "&sessionVariables=default_storage_engine=InnoDB";
+		}
+
+		Class.forName(driver);
+		return getHikariDataSource(url, username, password, driver).getConnection();
+	}
+
+	private static HikariDataSource hikariDataSource;
+
+	private static synchronized HikariDataSource getHikariDataSource(String url, String username, String password,
+	        String driver) throws SQLException {
+		if (hikariDataSource == null || hikariDataSource.isClosed()) {
+			HikariConfig config = new HikariConfig();
+			config.setJdbcUrl(url);
+			config.setUsername(username);
+			config.setPassword(password);
+			config.setDriverClassName(driver);
+			config.setMaximumPoolSize(20);
+			config.setMinimumIdle(5);
+			config.setConnectionTimeout(5000);
+			config.setIdleTimeout(600000);
+			config.setMaxLifetime(1800000);
+			config.setInitializationFailTimeout(-1); // Start without a connection
+			config.addDataSourceProperty("connectTimeout", "5000");
+			config.addDataSourceProperty("socketTimeout", "30000");
+			hikariDataSource = new HikariDataSource(config);
+		}
+		return hikariDataSource;
 	}
 
 	/**

@@ -65,11 +65,8 @@ public class ModuleResourcesServlet extends HttpServlet {
 		String mimeType = getServletContext().getMimeType(f.getName());
 		response.setContentType(mimeType);
 
-		FileInputStream is = new FileInputStream(f);
-		try {
+		try (FileInputStream is = new FileInputStream(f)) {
 			OpenmrsUtil.copyFile(is, response.getOutputStream());
-		} finally {
-			OpenmrsUtil.closeStream(is);
 		}
 	}
 

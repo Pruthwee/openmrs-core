@@ -10,12 +10,13 @@
 package org.openmrs.web.filter.initialization;
 
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.util.Properties;
 
 import org.openmrs.util.DatabaseUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DatabaseDetective {
 
@@ -26,6 +27,8 @@ public class DatabaseDetective {
 	private static final String CONNECTION_USERNAME = "connection.username";
 
 	private static final String CONNECTION_PASSWORD = "connection.password";
+
+	private static final Logger log = LoggerFactory.getLogger(DatabaseDetective.class);
 
 	/**
 	 * Check whether openmrs database is empty. Having just one non-liquibase table in the given
@@ -39,49 +42,39 @@ public class DatabaseDetective {
 			return true;
 		}
 
-		Connection connection = null;
-
 		try {
 			DatabaseUtil.loadDatabaseDriver(props.getProperty(CONNECTION_URL),
 			    props.getProperty(CONNECTION_DRIVER_CLASS, null));
 
-			connection = DriverManager.getConnection(props.getProperty(CONNECTION_URL),
+			try (Connection connection = DriverManager.getConnection(props.getProperty(CONNECTION_URL),
 			    props.getProperty(CONNECTION_USERNAME), props.getProperty(CONNECTION_PASSWORD));
+			        ResultSet tbls = connection.getMetaData().getTables(null, null, null, new String[] { "TABLE" })) {
 
-			DatabaseMetaData dbMetaData = connection.getMetaData();
+				//get all tables
+				while (tbls.next()) {
+					String tableName = tbls.getString("TABLE_NAME");
+					String tableSchema = tbls.getString("TABLE_SCHEM");
+					String schema = tableSchema != null ? tableSchema.toLowerCase() : "";
 
-			String[] types = { "TABLE" };
-
-			//get all tables
-			ResultSet tbls = dbMetaData.getTables(null, null, null, types);
-
-			while (tbls.next()) {
-				String tableName = tbls.getString("TABLE_NAME");
-				String tableSchema = tbls.getString("TABLE_SCHEM");
-				String schema = tableSchema != null ? tableSchema.toLowerCase() : "";
-
-				//if any public table exist besides "liquibasechangelog" or "liquibasechangeloglock", return false
-				if ((schema.isEmpty() || "public".equals(schema)) && !("liquibasechangelog".equalsIgnoreCase(tableName))
-				        && !("liquibasechangeloglock".equalsIgnoreCase(tableName))) {
-					return false;
+					//if any public table exist besides "liquibasechangelog" or "liquibasechangeloglock", return false
+					if ((schema.isEmpty() || "public".equals(schema)) && !("liquibasechangelog".equalsIgnoreCase(tableName))
+					        && !("liquibasechangeloglock".equalsIgnoreCase(tableName))) {
+						return false;
+					}
 				}
+				return true;
+			} catch (Exception e) {
+				// A configured instance (connection URL set) that we cannot reach is unreachable, not
+				// empty. Reporting it empty here would reopen the unauthenticated setup wizard on an
+				// already-configured deployment during a database outage, so only a genuinely
+				// unconfigured instance (no connection URL) counts as empty.
+				String url = props.getProperty(CONNECTION_URL);
+				return url == null || url.isBlank();
 			}
-			return true;
 		} catch (Exception e) {
-			// A configured instance (connection URL set) that we cannot reach is unreachable, not
-			// empty. Reporting it empty here would reopen the unauthenticated setup wizard on an
-			// already-configured deployment during a database outage, so only a genuinely
-			// unconfigured instance (no connection URL) counts as empty.
+			log.warn("Error while checking database", e);
 			String url = props.getProperty(CONNECTION_URL);
 			return url == null || url.isBlank();
-		} finally {
-			if (connection != null) {
-				try {
-					connection.close();
-				} catch (Exception e) {
-					// ignore; a failure to close must not change the emptiness result
-				}
-			}
 		}
 	}
 }

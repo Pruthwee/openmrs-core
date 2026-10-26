@@ -14,7 +14,6 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -74,71 +73,72 @@ public class DuplicateLocationAttributeTypeNameChangeSet implements CustomTaskCh
 	public void execute(Database database) throws CustomChangeException {
 		JdbcConnection connection = (JdbcConnection) database.getConnection();
 		Map<String, HashSet<Integer>> duplicates = new HashMap<>();
-		Statement stmt = null;
-		PreparedStatement pStmt = null;
-		ResultSet rs = null;
 		boolean autoCommit = true;
 		try {
 			// set auto commit mode to false for UPDATE action
 			autoCommit = connection.getAutoCommit();
 			connection.setAutoCommit(false);
-			stmt = connection.createStatement();
-			rs = stmt.executeQuery("SELECT * FROM location_attribute_type "
-			        + "INNER JOIN (SELECT name FROM location_attribute_type GROUP BY name HAVING count(name) > 1) "
-			        + "dup ON location_attribute_type.name = dup.name");
-			Integer id;
-			String name;
+			try (Statement stmt = connection.createStatement();
+			        ResultSet rs = stmt.executeQuery("SELECT * FROM location_attribute_type "
+			                + "INNER JOIN (SELECT name FROM location_attribute_type GROUP BY name HAVING count(name) > 1) "
+			                + "dup ON location_attribute_type.name = dup.name")) {
+				stmt.setQueryTimeout(30);
+				Integer id;
+				String name;
 
-			while (rs.next()) {
-				id = rs.getInt("location_attribute_type_id");
-				name = rs.getString("name");
-				if (duplicates.get(name) == null) {
-					HashSet<Integer> results = new HashSet<>();
-					results.add(id);
-					duplicates.put(name, results);
-				} else {
-					HashSet<Integer> results = duplicates.get(name);
-					results.add(id);
-				}
-			}
-
-			for (Object o : duplicates.entrySet()) {
-				Map.Entry pairs = (Map.Entry) o;
-				HashSet<Integer> values = (HashSet<Integer>) pairs.getValue();
-				List<Integer> duplicateNames = new ArrayList<Integer>(values);
-				int duplicateNameId = 1;
-				for (int i = 1; i < duplicateNames.size(); i++) {
-					String newName = pairs.getKey() + "_" + duplicateNameId;
-					List<List<Object>> duplicateResult;
-					boolean duplicateName;
-					Connection con = DatabaseUpdater.getConnection();
-					do {
-						String sqlValidatorString = "select * from location_attribute_type where name = '" + newName + "'";
-						duplicateResult = DatabaseUtil.executeSQL(con, sqlValidatorString, true);
-						if (!duplicateResult.isEmpty()) {
-							duplicateNameId += 1;
-							newName = pairs.getKey() + "_" + duplicateNameId;
-							duplicateName = true;
-						} else {
-							duplicateName = false;
-						}
-					} while (duplicateName);
-					pStmt = connection.prepareStatement(
-					    "update location_attribute_type set name = ?, changed_by = ?, date_changed = ? where location_attribute_type_id = ?");
-					if (!duplicateResult.isEmpty()) {
-						pStmt.setString(1, newName);
+				while (rs.next()) {
+					id = rs.getInt("location_attribute_type_id");
+					name = rs.getString("name");
+					if (duplicates.get(name) == null) {
+						HashSet<Integer> results = new HashSet<>();
+						results.add(id);
+						duplicates.put(name, results);
+					} else {
+						HashSet<Integer> results = duplicates.get(name);
+						results.add(id);
 					}
-					pStmt.setString(1, newName);
-					pStmt.setInt(2, DatabaseUpdater.getAuthenticatedUserId());
+				}
 
-					Calendar cal = Calendar.getInstance();
-					Date date = new Date(cal.getTimeInMillis());
+				for (Object o : duplicates.entrySet()) {
+					Map.Entry pairs = (Map.Entry) o;
+					HashSet<Integer> values = (HashSet<Integer>) pairs.getValue();
+					List<Integer> duplicateNames = new ArrayList<Integer>(values);
+					int duplicateNameId = 1;
+					for (int i = 1; i < duplicateNames.size(); i++) {
+						String newName = pairs.getKey() + "_" + duplicateNameId;
+						List<List<Object>> duplicateResult;
+						boolean duplicateName;
+						Connection con = DatabaseUpdater.getPooledConnection();
+						do {
+							String sqlValidatorString = "select * from location_attribute_type where name = '" + newName
+							        + "'";
+							duplicateResult = DatabaseUtil.executeSQL(con, sqlValidatorString, true);
+							if (!duplicateResult.isEmpty()) {
+								duplicateNameId += 1;
+								newName = pairs.getKey() + "_" + duplicateNameId;
+								duplicateName = true;
+							} else {
+								duplicateName = false;
+							}
+						} while (duplicateName);
+						try (PreparedStatement pStmt = connection.prepareStatement(
+						    "update location_attribute_type set name = ?, changed_by = ?, date_changed = ? where location_attribute_type_id = ?")) {
+							if (!duplicateResult.isEmpty()) {
+								pStmt.setString(1, newName);
+							}
+							pStmt.setString(1, newName);
+							pStmt.setInt(2, DatabaseUpdater.getAuthenticatedUserId());
 
-					pStmt.setDate(3, date);
-					pStmt.setInt(4, duplicateNames.get(i));
-					duplicateNameId += 1;
+							Calendar cal = Calendar.getInstance();
+							Date date = new Date(cal.getTimeInMillis());
 
-					pStmt.executeUpdate();
+							pStmt.setDate(3, date);
+							pStmt.setInt(4, duplicateNames.get(i));
+							duplicateNameId += 1;
+
+							pStmt.executeUpdate();
+						}
+					}
 				}
 			}
 		} catch (BatchUpdateException e) {
@@ -160,32 +160,6 @@ public class DuplicateLocationAttributeTypeNameChangeSet implements CustomTaskCh
 				connection.setAutoCommit(autoCommit);
 			} catch (DatabaseException e) {
 				log.warn("Failed to reset auto commit back to true", e);
-			}
-
-			if (rs != null) {
-				try {
-					rs.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the resultset object");
-				}
-			}
-
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn(
-					    "Failed to close the select statement used to identify duplicate LocationAttributeType object names");
-				}
-			}
-
-			if (pStmt != null) {
-				try {
-					pStmt.close();
-				} catch (SQLException e) {
-					log.warn(
-					    "Failed to close the prepared statement used to update duplicate LocationAttributeType object names");
-				}
 			}
 		}
 	}

@@ -10,7 +10,9 @@
 package org.openmrs.api.cache;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
 import org.infinispan.notifications.Listener;
@@ -73,7 +75,7 @@ public class GlobalPropertyCacheClusterTest {
 	public void setUp() {
 		dao1 = mockDao();
 		dao2 = mockDao();
-		fillExecutor = Executors.newCachedThreadPool();
+		fillExecutor = new ThreadPoolExecutor(2, 10, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100));
 		cache1 = new GlobalPropertyCache(node1, dao1, mock(PlatformTransactionManager.class), fillExecutor::submit);
 		cache2 = new GlobalPropertyCache(node2, dao2, mock(PlatformTransactionManager.class), fillExecutor::submit);
 	}

@@ -1200,8 +1200,6 @@ public class InitializationFilter extends StartupFilter {
 	 */
 	private int executeStatement(boolean silent, String user, String pw, String sql, String... args) {
 
-		Connection connection = null;
-		Statement statement = null;
 		try {
 			String replacedSql = sql;
 
@@ -1224,17 +1222,17 @@ public class InitializationFilter extends StartupFilter {
 				tempDatabaseConnection = wizardModel.databaseConnection.replace("@DBNAME@", wizardModel.databaseName);
 			}
 
-			connection = DriverManager.getConnection(tempDatabaseConnection, user, pw);
+			try (Connection connection = DriverManager.getConnection(tempDatabaseConnection, user, pw)) {
+				for (String arg : args) {
+					arg = arg.replace(";", "&#094"); // to prevent any sql injection
+					replacedSql = replacedSql.replaceFirst("\\?", arg);
+				}
 
-			for (String arg : args) {
-				arg = arg.replace(";", "&#094"); // to prevent any sql injection
-				replacedSql = replacedSql.replaceFirst("\\?", arg);
+				// run the sql statement
+				try (Statement statement = connection.createStatement()) {
+					return statement.executeUpdate(replacedSql);
+				}
 			}
-
-			// run the sql statement
-			statement = connection.createStatement();
-
-			return statement.executeUpdate(replacedSql);
 
 		} catch (SQLException sqlex) {
 			if (!silent) {
@@ -1244,22 +1242,6 @@ public class InitializationFilter extends StartupFilter {
 			}
 		} catch (InstantiationException | ClassNotFoundException | IllegalAccessException e) {
 			log.error("Error generated", e);
-		} finally {
-			try {
-				if (statement != null) {
-					statement.close();
-				}
-			} catch (SQLException e) {
-				log.warn("Error while closing statement");
-			}
-			try {
-
-				if (connection != null) {
-					connection.close();
-				}
-			} catch (Exception e) {
-				log.warn("Error while closing connection", e);
-			}
 		}
 
 		return -1;

@@ -9,8 +9,8 @@
  */
 package org.openmrs.api.db.hibernate;
 
-import java.io.File;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +42,6 @@ import org.openmrs.api.db.ContextDAO;
 import org.openmrs.api.db.UserDAO;
 import org.openmrs.api.db.hibernate.search.session.SearchSessionFactory;
 import org.openmrs.util.OpenmrsConstants;
-import org.openmrs.util.OpenmrsUtil;
 import org.openmrs.util.PrivilegeConstants;
 import org.openmrs.util.Security;
 import org.slf4j.Logger;
@@ -506,9 +505,13 @@ public class HibernateContextDAO implements ContextDAO {
 
 		// load in the default hibernate properties from hibernate.default.properties
 		Properties props = new Properties();
-		URL url = getClass().getResource("/hibernate.default.properties");
-		File file = new File(url.getPath());
-		OpenmrsUtil.loadProperties(props, file);
+		try (InputStream is = getClass().getResourceAsStream("/hibernate.default.properties")) {
+			if (is != null) {
+				props.load(is);
+			}
+		} catch (IOException e) {
+			log.warn("Unable to load hibernate.default.properties", e);
+		}
 
 		// add in all default properties that don't exist in the runtime
 		// properties yet

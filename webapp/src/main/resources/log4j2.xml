@@ -47,6 +47,12 @@
 		<Logger name="org.springframework" level="WARN" />
 		<Logger name="org.openmrs" level="WARN" />
 		<Logger name="liquibase" level="INFO" />
+		<!-- AWS SDK logging: prevent secrets and wire data from being logged -->
+		<Logger name="software.amazon.awssdk" level="WARN" />
+		<Logger name="software.amazon.awssdk.request" level="WARN" />
+		<Logger name="org.apache.http.wire" level="WARN" />
+		<Logger name="org.apache.http.headers" level="WARN" />
+		<Logger name="com.zaxxer.hikari" level="INFO" />
 		<!-- 
 			This controls the LoggingAdvice class that wraps around the OpenMRS services 
 			WARN == don't log anything special for the services

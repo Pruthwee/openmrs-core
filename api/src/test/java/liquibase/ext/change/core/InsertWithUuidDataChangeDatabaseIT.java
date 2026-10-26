@@ -51,11 +51,10 @@ public class InsertWithUuidDataChangeDatabaseIT extends DatabaseIT {
 
 	protected Map<String, String> getNamesWithUuids() throws SQLException {
 		Map<String, String> result = new HashMap<>();
-		try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
-			String query = "select * from name_with_uuid";
-			statement.execute(query);
+		try (Connection connection = getConnection();
+		        Statement statement = connection.createStatement();
+		        ResultSet resultSet = statement.executeQuery("select * from name_with_uuid")) {
 
-			ResultSet resultSet = statement.getResultSet();
 			while (resultSet.next()) {
 				result.put(resultSet.getString(1), resultSet.getString(2));
 			}

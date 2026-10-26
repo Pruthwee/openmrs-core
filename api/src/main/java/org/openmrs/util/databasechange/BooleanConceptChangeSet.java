@@ -273,10 +273,8 @@ public class BooleanConceptChangeSet implements CustomTaskChange {
 	 * @throws CustomChangeException
 	 */
 	private Integer getInt(JdbcConnection connection, String sql) throws CustomChangeException {
-		Statement stmt = null;
-		try {
-			stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery(sql);
+		try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+			stmt.setQueryTimeout(30);
 			Integer result = null;
 
 			if (rs.next()) {
@@ -293,12 +291,6 @@ public class BooleanConceptChangeSet implements CustomTaskChange {
 			return result;
 		} catch (DatabaseException | SQLException e) {
 			throw new CustomChangeException("Unable to get int", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {}
-			}
 		}
 	}
 

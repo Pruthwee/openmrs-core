@@ -156,26 +156,36 @@ if (owaspCSRFGuardScriptHasLoaded !== true) {
                 var self = this;
                 this.url = url;
 
+                // Force asynchronous mode to prevent blocking the event loop
+                if (async === false || async === undefined) {
+                    async = true;
+                }
+
                 this.base.onreadystatechange = function () {
                     try {
                         self.status = self.base.status;
                     } catch (e) {
+                        console.error("CSRFGuard: Error reading XHR status", e);
                     }
                     try {
                         self.statusText = self.base.statusText;
                     } catch (e) {
+                        console.error("CSRFGuard: Error reading XHR statusText", e);
                     }
                     try {
                         self.readyState = self.base.readyState;
                     } catch (e) {
+                        console.error("CSRFGuard: Error reading XHR readyState", e);
                     }
                     try {
                         self.responseText = self.base.responseText;
                     } catch (e) {
+                        console.error("CSRFGuard: Error reading XHR responseText", e);
                     }
                     try {
                         self.responseXML = self.base.responseXML;
                     } catch (e) {
+                        console.error("CSRFGuard: Error reading XHR responseXML", e);
                     }
 
                     if (self.onreadystatechange !== null) {
@@ -426,7 +436,7 @@ if (owaspCSRFGuardScriptHasLoaded !== true) {
                         element.setAttribute(attr, newLocation);
                         //console.debug('Attribute [', attr, '] with value [', newLocation, '] set for element: ', element);
                     } catch (e) {
-                        // attempted to set/update unsupported attribute
+                        console.error("CSRFGuard: Error setting attribute on element", e);
                     }
                 } else {
                     let newLocation = location;
@@ -650,7 +660,7 @@ if (owaspCSRFGuardScriptHasLoaded !== true) {
 
                                     injectTokens(tokenName, masterTokenValue, pageTokenWrapper.pageTokens);
                                 } catch (e) {
-                                    console.error("Error while updating tokens from response header.")
+                                    console.error("CSRFGuard: Error while updating tokens from response header.", e)
                                 }
                             }
                         }

@@ -111,7 +111,9 @@ public class Database1_9_7UpgradeIT extends BaseContextSensitiveTest {
 		props.load(new StringReader(propString));
 		String appDataDir = OpenmrsUtil.getApplicationDataDirectory();
 		File propFile = new File(appDataDir, DatabaseUtil.ORDER_ENTRY_UPGRADE_SETTINGS_FILENAME);
-		props.store(new FileWriter(propFile), null);
+		try (FileWriter fileWriter = new FileWriter(propFile)) {
+			props.store(fileWriter, null);
+		}
 		propFile.deleteOnExit();
 	}
 

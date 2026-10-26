@@ -119,6 +119,9 @@
 		<guavaVersion>33.7.2-jre</guavaVersion>
 		<javaUuidGeneratorVersion>5.2.0</javaUuidGeneratorVersion>
 		<awsSdkS3Version>2.32.13</awsSdkS3Version>
+		<awsSdkSecretsManagerVersion>2.32.13</awsSdkSecretsManagerVersion>
+		<awsSdkSsmVersion>2.32.13</awsSdkSsmVersion>
+		<hikariCpVersion>5.1.0</hikariCpVersion>
 		<jobrunrVersion>9.0.1</jobrunrVersion>
 		<shedlockVersion>7.10.1</shedlockVersion>
 
@@ -622,6 +625,16 @@
 				<version>${awsSdkS3Version}</version>
 			</dependency>
 			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>secretsmanager</artifactId>
+				<version>${awsSdkSecretsManagerVersion}</version>
+			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>ssm</artifactId>
+				<version>${awsSdkSsmVersion}</version>
+			</dependency>
+			<dependency>
 				<groupId>org.graalvm.js</groupId>
 				<artifactId>js</artifactId>
 				<version>${graalJsVersion}</version>
@@ -637,6 +650,11 @@
 				<groupId>org.jobrunr</groupId>
 				<artifactId>jobrunr</artifactId>
 				<version>${jobrunrVersion}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.zaxxer</groupId>
+				<artifactId>HikariCP</artifactId>
+				<version>${hikariCpVersion}</version>
 			</dependency>
 			<dependency>
 				<groupId>net.javacrumbs.shedlock</groupId>

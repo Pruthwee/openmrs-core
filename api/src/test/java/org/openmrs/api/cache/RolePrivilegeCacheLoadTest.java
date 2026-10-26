@@ -13,7 +13,8 @@ import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
@@ -86,7 +87,7 @@ public class RolePrivilegeCacheLoadTest {
 
 	@BeforeEach
 	public void setUp() {
-		executor = Executors.newCachedThreadPool();
+		executor = new ThreadPoolExecutor(2, 10, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100));
 		dao = mock(UserDAO.class);
 	}
 

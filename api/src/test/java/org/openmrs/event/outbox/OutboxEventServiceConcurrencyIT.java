@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
@@ -74,7 +76,8 @@ public class OutboxEventServiceConcurrencyIT extends BaseContextSensitiveNonTran
 
 	private void runInSeparateSession(Runnable action) throws InterruptedException {
 		List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
-		Thread thread = new Thread(() -> {
+		ExecutorService executor = Executors.newSingleThreadExecutor();
+		executor.submit(() -> {
 			Context.openSession();
 			try {
 				Context.authenticate(getCredentials());
@@ -85,8 +88,8 @@ public class OutboxEventServiceConcurrencyIT extends BaseContextSensitiveNonTran
 				Context.closeSession();
 			}
 		});
-		thread.start();
-		thread.join();
+		executor.shutdown();
+		executor.awaitTermination(30, java.util.concurrent.TimeUnit.SECONDS);
 		if (!errors.isEmpty()) {
 			throw new RuntimeException("action in separate session failed", errors.get(0));
 		}

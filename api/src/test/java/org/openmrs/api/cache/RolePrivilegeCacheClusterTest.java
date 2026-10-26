@@ -10,7 +10,9 @@
 package org.openmrs.api.cache;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.infinispan.Cache;
 import org.infinispan.context.Flag;
@@ -61,7 +63,7 @@ public class RolePrivilegeCacheClusterTest {
 		clerk = new Role("Clerk");
 		clerk.addPrivilege(new Privilege("View Patients"));
 
-		loadExecutor = Executors.newCachedThreadPool();
+		loadExecutor = new ThreadPoolExecutor(2, 10, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(100));
 		cache1 = new RolePrivilegeCache(nodes[0], mock(UserDAO.class), loadExecutor::submit, name -> clerk);
 		cache2 = new RolePrivilegeCache(nodes[1], mock(UserDAO.class), loadExecutor::submit, name -> clerk);
 	}

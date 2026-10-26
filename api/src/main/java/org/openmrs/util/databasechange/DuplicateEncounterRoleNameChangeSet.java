@@ -14,7 +14,6 @@ import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -74,9 +73,6 @@ public class DuplicateEncounterRoleNameChangeSet implements CustomTaskChange {
 	public void execute(Database database) throws CustomChangeException {
 		JdbcConnection connection = (JdbcConnection) database.getConnection();
 		Map<String, HashSet<Integer>> duplicates = new HashMap<>();
-		Statement stmt = null;
-		PreparedStatement pStmt = null;
-		ResultSet rs = null;
 		Boolean initialAutoCommit = null;
 
 		try {
@@ -85,71 +81,74 @@ public class DuplicateEncounterRoleNameChangeSet implements CustomTaskChange {
 			// set auto commit mode to false for UPDATE action
 			connection.setAutoCommit(false);
 
-			stmt = connection.createStatement();
-			rs = stmt.executeQuery(
-			    "SELECT * FROM encounter_role INNER JOIN (SELECT name FROM encounter_role GROUP BY name HAVING count(name) > 1) dup ON encounter_role.name = dup.name");
+			try (Statement stmt = connection.createStatement();
+			        ResultSet rs = stmt.executeQuery(
+			            "SELECT * FROM encounter_role INNER JOIN (SELECT name FROM encounter_role GROUP BY name HAVING count(name) > 1) dup ON encounter_role.name = dup.name")) {
+				stmt.setQueryTimeout(30);
 
-			Integer id;
-			String name;
+				Integer id;
+				String name;
 
-			while (rs.next()) {
-				id = rs.getInt("encounter_role_id");
-				name = rs.getString("name");
+				while (rs.next()) {
+					id = rs.getInt("encounter_role_id");
+					name = rs.getString("name");
 
-				if (duplicates.get(name) == null) {
-					HashSet<Integer> results = new HashSet<>();
-					results.add(id);
-					duplicates.put(name, results);
-				} else {
+					if (duplicates.get(name) == null) {
+						HashSet<Integer> results = new HashSet<>();
+						results.add(id);
+						duplicates.put(name, results);
+					} else {
 
-					HashSet<Integer> results = duplicates.get(name);
-					results.add(id);
-				}
-			}
-
-			for (Object o : duplicates.entrySet()) {
-				Map.Entry pairs = (Map.Entry) o;
-
-				HashSet<Integer> values = (HashSet<Integer>) pairs.getValue();
-				List<Integer> ids = new ArrayList<Integer>(values);
-
-				int duplicateNameId = 1;
-				for (int i = 1; i < ids.size(); i++) {
-					String newName = pairs.getKey() + "_" + duplicateNameId;
-					List<List<Object>> duplicateResult;
-					boolean duplicateName;
-					Connection con = DatabaseUpdater.getConnection();
-					do {
-						String sqlValidatorString = "select * from encounter_role where name = '" + newName + "'";
-						duplicateResult = DatabaseUtil.executeSQL(con, sqlValidatorString, true);
-
-						if (!duplicateResult.isEmpty()) {
-
-							duplicateNameId += 1;
-							newName = pairs.getKey() + "_" + duplicateNameId;
-							duplicateName = true;
-						} else {
-							duplicateName = false;
-						}
-					} while (duplicateName);
-
-					pStmt = connection.prepareStatement(
-					    "update encounter_role set name = ?, changed_by = ?, date_changed = ? where encounter_role_id = ?");
-					if (!duplicateResult.isEmpty()) {
-						pStmt.setString(1, newName);
+						HashSet<Integer> results = duplicates.get(name);
+						results.add(id);
 					}
+				}
 
-					pStmt.setString(1, newName);
-					pStmt.setInt(2, DatabaseUpdater.getAuthenticatedUserId());
+				for (Object o : duplicates.entrySet()) {
+					Map.Entry pairs = (Map.Entry) o;
 
-					Calendar cal = Calendar.getInstance();
-					Date date = new Date(cal.getTimeInMillis());
+					HashSet<Integer> values = (HashSet<Integer>) pairs.getValue();
+					List<Integer> ids = new ArrayList<Integer>(values);
 
-					pStmt.setDate(3, date);
-					pStmt.setInt(4, ids.get(i));
-					duplicateNameId += 1;
+					int duplicateNameId = 1;
+					for (int i = 1; i < ids.size(); i++) {
+						String newName = pairs.getKey() + "_" + duplicateNameId;
+						List<List<Object>> duplicateResult;
+						boolean duplicateName;
+						Connection con = DatabaseUpdater.getPooledConnection();
+						do {
+							String sqlValidatorString = "select * from encounter_role where name = '" + newName + "'";
+							duplicateResult = DatabaseUtil.executeSQL(con, sqlValidatorString, true);
 
-					pStmt.executeUpdate();
+							if (!duplicateResult.isEmpty()) {
+
+								duplicateNameId += 1;
+								newName = pairs.getKey() + "_" + duplicateNameId;
+								duplicateName = true;
+							} else {
+								duplicateName = false;
+							}
+						} while (duplicateName);
+
+						try (PreparedStatement pStmt = connection.prepareStatement(
+						    "update encounter_role set name = ?, changed_by = ?, date_changed = ? where encounter_role_id = ?")) {
+							if (!duplicateResult.isEmpty()) {
+								pStmt.setString(1, newName);
+							}
+
+							pStmt.setString(1, newName);
+							pStmt.setInt(2, DatabaseUpdater.getAuthenticatedUserId());
+
+							Calendar cal = Calendar.getInstance();
+							Date date = new Date(cal.getTimeInMillis());
+
+							pStmt.setDate(3, date);
+							pStmt.setInt(4, ids.get(i));
+							duplicateNameId += 1;
+
+							pStmt.executeUpdate();
+						}
+					}
 				}
 			}
 		}
@@ -177,31 +176,6 @@ public class DuplicateEncounterRoleNameChangeSet implements CustomTaskChange {
 				}
 			} catch (DatabaseException e) {
 				log.warn("Failed to set auto commit to ids initial state", e);
-			}
-
-			if (rs != null) {
-				try {
-					rs.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the resultset object");
-				}
-			}
-
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the select statement used to identify duplicate EncounterRole object names");
-				}
-			}
-
-			if (pStmt != null) {
-				try {
-					pStmt.close();
-
-				} catch (SQLException e) {
-					log.warn("Failed to close the prepared statement used to update duplicate EncounterRole object names");
-				}
 			}
 		}
 	}

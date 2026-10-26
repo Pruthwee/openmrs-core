@@ -191,11 +191,9 @@ public class AddConceptMapTypesChangeset implements CustomTaskChange {
 	 * @return integer resulting from the execution of the sql statement
 	 */
 	private int getInt(JdbcConnection connection, String sql) {
-		Statement stmt = null;
 		int result = 0;
-		try {
-			stmt = connection.createStatement();
-			ResultSet rs = stmt.executeQuery(sql);
+		try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql)) {
+			stmt.setQueryTimeout(30);
 
 			if (rs.next()) {
 				result = rs.getInt(1);
@@ -210,14 +208,6 @@ public class AddConceptMapTypesChangeset implements CustomTaskChange {
 			return result;
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
 		}
 
 		return result;

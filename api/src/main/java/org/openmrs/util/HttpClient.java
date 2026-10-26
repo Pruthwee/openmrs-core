@@ -51,6 +51,8 @@ public class HttpClient {
 
 			// Send the data
 			HttpURLConnection connection = url.openConnection();
+			connection.setConnectTimeout(5000);
+			connection.setReadTimeout(30000);
 			connection.setDoOutput(true);
 			connection.setDoInput(true);
 			connection.setRequestMethod("POST");
@@ -76,6 +78,8 @@ public class HttpClient {
 				// get redirect url from "location" header field
 				String newUrl = connection.getHeaderField("Location");
 				connection = (HttpURLConnection) new URL(newUrl).openConnection();
+				connection.setConnectTimeout(5000);
+				connection.setReadTimeout(30000);
 
 				log.info("Redirection to : " + newUrl);
 

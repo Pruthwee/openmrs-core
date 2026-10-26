@@ -64,8 +64,9 @@ public class OpenmrsApplicationContextConfig {
 	@Bean
 	public TaskExecutor taskExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(1);
-		executor.setMaxPoolSize(20);
+		int processors = Runtime.getRuntime().availableProcessors();
+		executor.setCorePoolSize(Math.max(1, processors / 2));
+		executor.setMaxPoolSize(Math.max(2, processors));
 		executor.setQueueCapacity(1000);
 		return executor;
 	}

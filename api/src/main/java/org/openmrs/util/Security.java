@@ -31,6 +31,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 
+import software.amazon.awssdk.core.exception.SdkException;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
+import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
+
 /**
  * OpenMRS's security class deals with the hashing of passwords.
  */
@@ -304,14 +310,41 @@ public class Security {
 	}
 
 	/**
+	 * Reads a secret value from AWS Secrets Manager.
+	 *
+	 * @param secretName the name or ARN of the secret
+	 * @return the secret string value, or null if not found
+	 */
+	private static String getSecretValue(String secretName) {
+		if (secretName == null || secretName.isBlank()) {
+			return null;
+		}
+		try {
+			SecretsManagerClient client = SecretsManagerClient.builder()
+			        .region(Region.of(System.getenv().getOrDefault("AWS_REGION", "us-east-1"))).build();
+			GetSecretValueRequest request = GetSecretValueRequest.builder().secretId(secretName).build();
+			GetSecretValueResponse response = client.getSecretValue(request);
+			return response.secretString();
+		} catch (SdkException e) {
+			log.warn("Unable to retrieve secret from AWS Secrets Manager", e);
+			return null;
+		}
+	}
+
+	/**
 	 * retrieve the stored init vector from runtime properties
 	 *
 	 * @return stored init vector byte array
 	 * @since 1.9
 	 */
 	public static byte[] getSavedInitVector() {
-		String initVectorText = Context.getRuntimeProperties().getProperty(
-		    OpenmrsConstants.ENCRYPTION_VECTOR_RUNTIME_PROPERTY, OpenmrsConstants.ENCRYPTION_VECTOR_DEFAULT);
+		String initVectorText = Context.getRuntimeProperties()
+		        .getProperty(OpenmrsConstants.ENCRYPTION_VECTOR_RUNTIME_PROPERTY);
+
+		if (!StringUtils.hasText(initVectorText)) {
+			// Read from AWS Secrets Manager
+			initVectorText = getSecretValue(OpenmrsConstants.ENCRYPTION_VECTOR_SECRET_NAME);
+		}
 
 		if (StringUtils.hasText(initVectorText)) {
 			return Base64.getDecoder().decode(initVectorText);
@@ -342,8 +375,12 @@ public class Security {
 	 * @since 1.9
 	 */
 	public static byte[] getSavedSecretKey() {
-		String keyText = Context.getRuntimeProperties().getProperty(OpenmrsConstants.ENCRYPTION_KEY_RUNTIME_PROPERTY,
-		    OpenmrsConstants.ENCRYPTION_KEY_DEFAULT);
+		String keyText = Context.getRuntimeProperties().getProperty(OpenmrsConstants.ENCRYPTION_KEY_RUNTIME_PROPERTY);
+
+		if (!StringUtils.hasText(keyText)) {
+			// Read from AWS Secrets Manager
+			keyText = getSecretValue(OpenmrsConstants.ENCRYPTION_KEY_SECRET_NAME);
+		}
 
 		if (StringUtils.hasText(keyText)) {
 			return Base64.getDecoder().decode(keyText);

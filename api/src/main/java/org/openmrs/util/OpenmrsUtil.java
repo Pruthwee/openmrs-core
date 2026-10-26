@@ -34,9 +34,12 @@ import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -794,14 +797,10 @@ public class OpenmrsUtil {
 	 * @return the date with the last millisecond of the day.
 	 */
 	public static Date getLastMomentOfDay(Date day) {
-		Calendar calender = Calendar.getInstance();
-		calender.setTime(day);
-		calender.set(Calendar.HOUR_OF_DAY, 23);
-		calender.set(Calendar.MINUTE, 59);
-		calender.set(Calendar.SECOND, 59);
-		calender.set(Calendar.MILLISECOND, 999);
-
-		return calender.getTime();
+		ZoneId zone = ZoneId.systemDefault();
+		LocalDate localDate = day.toInstant().atZone(zone).toLocalDate();
+		LocalDateTime lastMoment = localDate.atTime(23, 59, 59, 999_000_000);
+		return Date.from(lastMoment.atZone(zone).toInstant());
 	}
 
 	/**
@@ -817,14 +816,10 @@ public class OpenmrsUtil {
 			return null;
 		}
 
-		Calendar c = Calendar.getInstance();
-		c.setTime(date);
-		c.set(Calendar.HOUR_OF_DAY, 0);
-		c.set(Calendar.MINUTE, 0);
-		c.set(Calendar.SECOND, 0);
-		c.set(Calendar.MILLISECOND, 0);
-
-		return c.getTime();
+		ZoneId zone = ZoneId.systemDefault();
+		LocalDate localDate = date.toInstant().atZone(zone).toLocalDate();
+		LocalDateTime firstMoment = localDate.atStartOfDay();
+		return Date.from(firstMoment.atZone(zone).toInstant());
 	}
 
 	public static Date safeDate(Date d1) {
@@ -1194,15 +1189,15 @@ public class OpenmrsUtil {
 
 		Date ret = null;
 		if (withinLastDays != null || withinLastMonths != null) {
-			Calendar gc = Calendar.getInstance();
-			gc.setTime(comparisonDate != null ? comparisonDate : new Date());
+			LocalDate now = (comparisonDate != null ? comparisonDate : new Date()).toInstant().atZone(ZoneId.systemDefault())
+			        .toLocalDate();
 			if (withinLastDays != null) {
-				gc.add(Calendar.DAY_OF_MONTH, -withinLastDays);
+				now = now.minusDays(withinLastDays);
 			}
 			if (withinLastMonths != null) {
-				gc.add(Calendar.MONTH, -withinLastMonths);
+				now = now.minusMonths(withinLastMonths);
 			}
-			ret = gc.getTime();
+			ret = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
 		}
 		if (sinceDate != null && (ret == null || sinceDate.after(ret))) {
 			ret = sinceDate;
@@ -1215,15 +1210,15 @@ public class OpenmrsUtil {
 
 		Date ret = null;
 		if (untilDaysAgo != null || untilMonthsAgo != null) {
-			Calendar gc = Calendar.getInstance();
-			gc.setTime(comparisonDate != null ? comparisonDate : new Date());
+			LocalDate now = (comparisonDate != null ? comparisonDate : new Date()).toInstant().atZone(ZoneId.systemDefault())
+			        .toLocalDate();
 			if (untilDaysAgo != null) {
-				gc.add(Calendar.DAY_OF_MONTH, -untilDaysAgo);
+				now = now.minusDays(untilDaysAgo);
 			}
 			if (untilMonthsAgo != null) {
-				gc.add(Calendar.MONTH, -untilMonthsAgo);
+				now = now.minusMonths(untilMonthsAgo);
 			}
-			ret = gc.getTime();
+			ret = Date.from(now.atStartOfDay(ZoneId.systemDefault()).toInstant());
 		}
 		if (untilDate != null && (ret == null || untilDate.before(ret))) {
 			ret = untilDate;
@@ -1488,7 +1483,8 @@ public class OpenmrsUtil {
 		File outFile;
 		do {
 			// format to print date in filename
-			DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd-HHmm-ssSSS");
+			DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy.MM.dd-HHmm-ssSSS")
+			        .withZone(ZoneId.systemDefault());
 
 			// use current date if none provided
 			if (date == null) {
@@ -1498,7 +1494,7 @@ public class OpenmrsUtil {
 			StringBuilder filename = new StringBuilder();
 
 			// the start of the filename is the time so we can do some sorting
-			filename.append(dateFormat.format(date));
+			filename.append(dateFormat.format(date.toInstant()));
 
 			// insert the user id if they provided it
 			if (user != null) {
@@ -2118,14 +2114,11 @@ public class OpenmrsUtil {
 			return false;
 		}
 
-		Calendar c1 = Calendar.getInstance();
-		c1.add(Calendar.DAY_OF_YEAR, -1); // yesterday
+		ZoneId zone = ZoneId.systemDefault();
+		LocalDate yesterday = LocalDate.now(zone).minusDays(1);
+		LocalDate dateLocal = date.toInstant().atZone(zone).toLocalDate();
 
-		Calendar c2 = Calendar.getInstance();
-		c2.setTime(date);
-
-		return (c1.get(Calendar.ERA) == c2.get(Calendar.ERA) && c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR)
-		        && c1.get(Calendar.DAY_OF_YEAR) == c2.get(Calendar.DAY_OF_YEAR));
+		return yesterday.isEqual(dateLocal);
 	}
 
 	/**

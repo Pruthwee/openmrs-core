@@ -9,9 +9,7 @@
  */
 package org.openmrs.util;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
@@ -74,8 +72,11 @@ public class DateUtil {
 			        : LocalDateTime.from(parsed).atZone(ZoneId.systemDefault()).toInstant();
 			return Date.from(instant);
 		} else {
-			DateFormat legacyFormat = new SimpleDateFormat(DATETIME_PATTERN);
-			return legacyFormat.parse(str);
+			// Legacy space-separated format — use java.time with system default timezone
+			DateTimeFormatter legacyFormatter = DateTimeFormatter.ofPattern(DATETIME_PATTERN)
+			        .withZone(ZoneId.systemDefault());
+			LocalDateTime parsed = LocalDateTime.parse(str, legacyFormatter);
+			return Date.from(parsed.atZone(ZoneId.systemDefault()).toInstant());
 		}
 	}
 
