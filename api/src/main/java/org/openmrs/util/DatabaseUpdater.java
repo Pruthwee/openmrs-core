@@ -22,9 +22,9 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -88,6 +88,8 @@ public class DatabaseUpdater {
 	private static final Logger log = LoggerFactory.getLogger(DatabaseUpdater.class);
 
 	private static final String EMPTY_CHANGE_LOG_FILE = "liquibase-empty-changelog.xml";
+
+	private static final int JDBC_CONNECT_TIMEOUT_MS = 5000;
 
 	public static final String CONTEXT = "core";
 
@@ -493,6 +495,17 @@ public class DatabaseUpdater {
 		}
 
 		Class.forName(driver);
+		if (url.startsWith("jdbc:mysql:") || url.startsWith("jdbc:mariadb:")) {
+			Properties connectionProps = new Properties();
+			if (username != null) {
+				connectionProps.setProperty("user", username);
+			}
+			if (password != null) {
+				connectionProps.setProperty("password", password);
+			}
+			connectionProps.setProperty("connectTimeout", String.valueOf(JDBC_CONNECT_TIMEOUT_MS));
+			return DriverManager.getConnection(url, connectionProps);
+		}
 		return DriverManager.getConnection(url, username, password);
 	}
 
@@ -775,7 +788,7 @@ public class DatabaseUpdater {
 		File destFile = new File(OpenmrsUtil.getApplicationDataDirectory(), DatabaseUpdater.DATABASE_UPDATES_LOG_FILE);
 		try {
 			String lineSeparator = System.getProperty("line.separator");
-			Date date = Calendar.getInstance().getTime();
+			Date date = Date.from(Instant.now());
 
 			streamWriter = new OutputStreamWriter(new FileOutputStream(destFile, true), StandardCharsets.UTF_8);
 			writer = new PrintWriter(new BufferedWriter(streamWriter));

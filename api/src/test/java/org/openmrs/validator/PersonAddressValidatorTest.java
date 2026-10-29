@@ -9,7 +9,9 @@
  */
 package org.openmrs.validator;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +73,7 @@ public class PersonAddressValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailIfTheStartDateIsInTheFuture() {
 		PersonAddress personAddress = new PersonAddress();
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		// put the time into the future by a minute
 		c.add(Calendar.MINUTE, 1);
 		personAddress.setStartDate(c.getTime());
@@ -86,7 +88,7 @@ public class PersonAddressValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailIfTheEndDateIsBeforeTheStartDate() {
 		PersonAddress personAddress = new PersonAddress();
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		personAddress.setStartDate(c.getTime());
 		c.set(2010, 3, 15);//set to an older date
 		personAddress.setEndDate(c.getTime());
@@ -101,7 +103,7 @@ public class PersonAddressValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldPassIfAllTheDatesAreValid() {
 		PersonAddress personAddress = new PersonAddress();
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		personAddress.setStartDate(c.getTime());
 		personAddress.setEndDate(c.getTime());
 		Errors errors = new BindException(personAddress, "personAddress");
@@ -128,7 +130,7 @@ public class PersonAddressValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldPassIfStartDateIsNull() {
 		PersonAddress personAddress = new PersonAddress();
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		personAddress.setStartDate(null);
 		personAddress.setEndDate(c.getTime());
 		Errors errors = new BindException(personAddress, "personAddress");
@@ -142,7 +144,7 @@ public class PersonAddressValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldPassIfEndDateIsNull() {
 		PersonAddress personAddress = new PersonAddress();
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		personAddress.setStartDate(c.getTime());
 		personAddress.setEndDate(null);
 		Errors errors = new BindException(personAddress, "personAddress");

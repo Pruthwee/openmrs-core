@@ -9,8 +9,8 @@
  */
 package org.openmrs.util;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -42,7 +42,7 @@ public class FormUtil {
 	private FormUtil() {
 	}
 
-	private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ssZ";
+	private static final String DATE_TIME_FORMAT = "yyyy-MM-dd'T'HH:mm:ssxx";
 
 	/**
 	 * Converts a string into a valid XML token (tag name)
@@ -183,8 +183,8 @@ public class FormUtil {
 	}
 
 	public static String dateToString(Date date) {
-		DateFormat dateFormatter = new SimpleDateFormat(DATE_TIME_FORMAT);
-		String dateString = dateFormatter.format(new Date());
+		DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT).withZone(ZoneId.systemDefault());
+		String dateString = dateFormatter.format(new Date().toInstant());
 		// ISO 8601 requires a colon in time zone offset (Java doesn't
 		// include the colon, so we need to insert it
 		return dateString.substring(0, 22) + ":" + dateString.substring(22);

@@ -9,9 +9,11 @@
  */
 package org.openmrs.api.db.hibernate;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -193,13 +195,13 @@ public class HibernateOrderDAO implements OrderDAO {
 		}
 		if (searchCriteria.getActivatedOnOrBeforeDate() != null) {
 			// set the date's time to the last millisecond of the date
-			Calendar cal = Calendar.getInstance();
+			Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 			cal.setTime(searchCriteria.getActivatedOnOrBeforeDate());
 			predicates.add(cb.lessThanOrEqualTo(root.get("dateActivated"), OpenmrsUtil.getLastMomentOfDay(cal.getTime())));
 		}
 		if (searchCriteria.getActivatedOnOrAfterDate() != null) {
 			// set the date's time to 00:00:00.000
-			Calendar cal = Calendar.getInstance();
+			Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 			cal.setTime(searchCriteria.getActivatedOnOrAfterDate());
 			predicates.add(cb.greaterThanOrEqualTo(root.get("dateActivated"), OpenmrsUtil.firstSecondOfDay(cal.getTime())));
 		}
@@ -209,7 +211,7 @@ public class HibernateOrderDAO implements OrderDAO {
 		}
 		if (searchCriteria.getAutoExpireOnOrBeforeDate() != null) {
 			// set the date's time to the last millisecond of the date
-			Calendar cal = Calendar.getInstance();
+			Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 			cal.setTime(searchCriteria.getAutoExpireOnOrBeforeDate());
 			predicates.add(cb.lessThanOrEqualTo(root.get("autoExpireDate"), OpenmrsUtil.getLastMomentOfDay(cal.getTime())));
 		}
@@ -243,7 +245,7 @@ public class HibernateOrderDAO implements OrderDAO {
 		}
 
 		if (searchCriteria.getExcludeCanceledAndExpired()) {
-			Calendar cal = Calendar.getInstance();
+			Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 			// exclude expired orders (include only orders with autoExpireDate = null or autoExpireDate in the future)
 			predicates.add(
 			    cb.or(cb.isNull(root.get("autoExpireDate")), cb.greaterThan(root.get("autoExpireDate"), cal.getTime())));
@@ -253,7 +255,7 @@ public class HibernateOrderDAO implements OrderDAO {
 		}
 		if (searchCriteria.getCanceledOrExpiredOnOrBeforeDate() != null) {
 			// set the date's time to the last millisecond of the date
-			Calendar cal = Calendar.getInstance();
+			Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 			cal.setTime(searchCriteria.getCanceledOrExpiredOnOrBeforeDate());
 			predicates.add(cb.or(
 			    cb.and(cb.isNotNull(root.get("dateStopped")),

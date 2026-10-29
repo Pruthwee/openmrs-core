@@ -9,9 +9,12 @@
  */
 package org.openmrs.util;
 
+import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeUtils;
@@ -62,7 +65,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInRange_shouldReturnTrueIfAgeIsWithinRange() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -5);
 		person.setBirthdate(calendar.getTime());
 
@@ -74,7 +77,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInRange_shouldReturnFalseIfAgeIsOutsideRange() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -11);
 		person.setBirthdate(calendar.getTime());
 
@@ -86,7 +89,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInRange_shouldReturnTrueIfAgeIsOnBoundary() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -10);
 		person.setBirthdate(calendar.getTime());
 
@@ -98,7 +101,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInMonths_shouldReturnTrueIfAgeIsWithinRange() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.MONTH, -5);
 		Date birthDate = calendar.getTime();
 		person.setBirthdate(birthDate);
@@ -112,7 +115,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInDays_shouldReturnTrueIfAgeIsWithinRange() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, -5);
 		person.setBirthdate(calendar.getTime());
 
@@ -125,7 +128,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInDays_shouldReturnFalseIfAgeIsOutsideRange() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, -10);
 		person.setBirthdate(calendar.getTime());
 
@@ -138,7 +141,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInWeeks_shouldReturnTrueIfAgeMatches() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.WEEK_OF_YEAR, -2);
 		person.setBirthdate(calendar.getTime());
 
@@ -150,7 +153,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testMixedAgeMethods_shouldReturnTrueIfBothConditionsMatch() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.MONTH, -8);
 		person.setBirthdate(calendar.getTime());
 
@@ -163,7 +166,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInRange_shouldThrowExceptionIfCriteriaIsInvalid() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -1);
 		person.setBirthdate(calendar.getTime());
 
@@ -175,7 +178,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeInRange_shouldThrowAnExceptionIfCriteriaIsEmpty() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.set(2019, Calendar.JUNE, 2);
 		person.setBirthdate(calendar.getTime());
 
@@ -248,7 +251,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeAndGenderMatch_shouldReturnTrueIfAgeAndGenderMatch() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -5);
 		person.setBirthdate(calendar.getTime());
 		person.setGender("M");
@@ -262,7 +265,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeAndGenderMatch_shouldReturnTrueIfAgeOrGenderMatch() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -5);
 		person.setBirthdate(calendar.getTime());
 		person.setGender("M");
@@ -276,7 +279,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeAndGenderMatch_shouldReturnFalseIfAgeDoesNotMatch() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -11);
 		person.setBirthdate(calendar.getTime());
 		person.setGender("M");
@@ -290,7 +293,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeAndGenderMatch_shouldReturnFalseIfGenderDoesNotMatch() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -5);
 		person.setBirthdate(calendar.getTime());
 		person.setGender("F");
@@ -395,7 +398,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testNegation_shouldReturnTrueWhenAllNegatedConditionsAreFalse() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -25);
 		person.setBirthdate(calendar.getTime());
 		person.setGender("F");
@@ -412,7 +415,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testNegation_shouldReturnFalseWhenNegatedConditionIsTrue() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -25);
 		person.setBirthdate(calendar.getTime());
 		person.setGender("F");
@@ -442,7 +445,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 	@Test
 	public void testTimeOfDay_shouldReturnTrueIfTimeOfDayMatches() {
 		// Freeze time at the current system time
-		DateTimeUtils.setCurrentMillisFixed(System.currentTimeMillis());
+		DateTimeUtils.setCurrentMillisFixed(Instant.now().toEpochMilli());
 
 		Obs obs = buildObs();
 		obs.setPerson(person);
@@ -457,7 +460,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 	@Test
 	public void testTimeOfDay_shouldReturnFalseIfTimeOfDayDoesNotMatch() {
 		// Freeze time at the current system time
-		DateTimeUtils.setCurrentMillisFixed(System.currentTimeMillis());
+		DateTimeUtils.setCurrentMillisFixed(Instant.now().toEpochMilli());
 
 		Obs obs = buildObs();
 		obs.setPerson(person);
@@ -548,7 +551,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 		Obs obs = buildObs();
 		obs.setPerson(person);
 
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, -90);
 		obs.setValueDate(calendar.getTime());
 
@@ -569,7 +572,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 		Obs obs = buildObs();
 		obs.setPerson(person);
 
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.WEEK_OF_YEAR, -32);
 		obs.setValueDate(calendar.getTime());
 
@@ -590,7 +593,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 		Obs obs = buildObs();
 		obs.setPerson(person);
 
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.MONTH, -9);
 		obs.setValueDate(calendar.getTime());
 
@@ -611,7 +614,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 		Obs obs = buildObs();
 		obs.setPerson(person);
 
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -18);
 		obs.setValueDate(calendar.getTime());
 
@@ -745,7 +748,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testDaysBetween_shouldSupportPropertyAccessAsMethodArguments() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, -15);
 		person.setBirthdate(calendar.getTime());
 
@@ -761,7 +764,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getWeeksBetween_shouldReturnNumberOfWeeksBetweenDates() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.WEEK_OF_YEAR, -10);
 		person.setBirthdate(calendar.getTime());
 
@@ -775,7 +778,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getMonthsBetween_shouldReturnNumberOfMonthsBetweenDates() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.MONTH, -6);
 		person.setBirthdate(calendar.getTime());
 
@@ -789,7 +792,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getYearsBetween_shouldReturnNumberOfYearsBetweenDates() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -3);
 		person.setBirthdate(calendar.getTime());
 
@@ -803,7 +806,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getDays_shouldReturnNumberOfDaysFromDateToNow() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, -45);
 		person.setBirthdate(calendar.getTime());
 
@@ -815,7 +818,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getWeeks_shouldReturnNumberOfWeeksFromDateToNow() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.WEEK_OF_YEAR, -8);
 		person.setBirthdate(calendar.getTime());
 
@@ -827,7 +830,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getMonths_shouldReturnNumberOfMonthsFromDateToNow() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.MONTH, -4);
 		person.setBirthdate(calendar.getTime());
 
@@ -839,7 +842,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getYears_shouldReturnNumberOfYearsFromDateToNow() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -7);
 		person.setBirthdate(calendar.getTime());
 
@@ -854,7 +857,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 		Obs obs = buildObs();
 		obs.setPerson(person);
 
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, -30);
 		obs.setValueDate(calendar.getTime());
 
@@ -881,7 +884,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testAgeAndObs_shouldReturnTrueIfAgeAndObsConditionsMatch() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, -5);
 		person.setBirthdate(calendar.getTime());
 
@@ -889,7 +892,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 		obs.setPerson(person);
 
 		Obs obsWithDate = buildObs();
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.WEEK_OF_YEAR, -33);
 		obsWithDate.setValueDate(calendar.getTime());
 
@@ -1013,7 +1016,7 @@ class ConceptReferenceRangeUtilityTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void testSandbox_shouldBlockReflectionViaGetClass() {
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -5);
 		person.setBirthdate(calendar.getTime());
 

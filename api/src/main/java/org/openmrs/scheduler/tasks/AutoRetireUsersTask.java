@@ -9,6 +9,7 @@
  */
 package org.openmrs.scheduler.tasks;
 
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -85,12 +86,12 @@ public class AutoRetireUsersTask extends AbstractTask {
 		if (StringUtils.isNotBlank(lastLoginTimeString)) {
 			long lastLoginTime = Long.parseLong(lastLoginTimeString);
 
-			return System.currentTimeMillis() - lastLoginTime >= numberOfMillisecondsToRetire;
+			return Instant.now().toEpochMilli() - lastLoginTime >= numberOfMillisecondsToRetire;
 		} else {
 			Date dateCreated = user.getDateCreated();
 
 			if (dateCreated != null) {
-				return System.currentTimeMillis() - dateCreated.getTime() >= numberOfMillisecondsToRetire;
+				return Instant.now().toEpochMilli() - dateCreated.getTime() >= numberOfMillisecondsToRetire;
 			}
 		}
 

@@ -10,7 +10,9 @@
 package org.openmrs.api;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -694,8 +696,8 @@ public class CohortServiceTest extends BaseContextSensitiveTest {
 		Cohort cohort = Context.getCohortService().getCohort(1);
 
 		CohortMembership newMember = new CohortMembership(4);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date dateToTest = dateFormat.parse("2016-11-01 00:00:00");
+		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		Date dateToTest = Date.from(LocalDateTime.parse("2016-11-01 00:00:00", dateFormat).atZone(ZoneId.systemDefault()).toInstant());
 		newMember.setStartDate(dateToTest);
 		cohort.addMembership(newMember);
 		service.saveCohort(cohort);
@@ -717,13 +719,13 @@ public class CohortServiceTest extends BaseContextSensitiveTest {
 		Cohort cohort = Context.getCohortService().getCohort(1);
 
 		CohortMembership newMember = new CohortMembership(4);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2017-11-01 00:00:00");
+		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		Date startDate = Date.from(LocalDateTime.parse("2017-11-01 00:00:00", dateFormat).atZone(ZoneId.systemDefault()).toInstant());
 		newMember.setStartDate(startDate);
 		cohort.addMembership(newMember);
 		service.saveCohort(cohort);
 
-		Date dateToTest = dateFormat.parse("2016-11-01 00:00:00");
+		Date dateToTest = Date.from(LocalDateTime.parse("2016-11-01 00:00:00", dateFormat).atZone(ZoneId.systemDefault()).toInstant());
 		Collection<CohortMembership> membersAsOfDate = cohort.getActiveMemberships(dateToTest);
 		assertFalse(membersAsOfDate.stream().anyMatch(m -> m.getStartDate().equals(dateToTest)));
 	}
@@ -792,13 +794,13 @@ public class CohortServiceTest extends BaseContextSensitiveTest {
 
 		Patient patient = new Patient(7);
 		CohortMembership membership = new CohortMembership(patient.getPatientId());
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2017-01-01 00:00:00");
+		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		Date startDate = Date.from(LocalDateTime.parse("2017-01-01 00:00:00", dateFormat).atZone(ZoneId.systemDefault()).toInstant());
 		membership.setStartDate(startDate);
 		cohort.addMembership(membership);
 		assertTrue(cohort.contains(patient.getPatientId()));
 
-		Date endDate = dateFormat.parse("2017-01-31 00:00:00");
+		Date endDate = Date.from(LocalDateTime.parse("2017-01-31 00:00:00", dateFormat).atZone(ZoneId.systemDefault()).toInstant());
 		membership.setEndDate(endDate);
 
 		List<Cohort> cohortsWithPatientAdded = service.getCohortsContainingPatientId(patient.getId());

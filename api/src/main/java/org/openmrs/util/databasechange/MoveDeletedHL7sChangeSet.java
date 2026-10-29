@@ -12,6 +12,7 @@ package org.openmrs.util.databasechange;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import org.openmrs.hl7.HL7Constants;
 
@@ -57,20 +58,22 @@ public class MoveDeletedHL7sChangeSet implements CustomTaskChange {
 			deleteStatement = connection.prepareStatement("DELETE FROM hl7_in_archive WHERE hl7_in_archive_id=?");
 
 			// iterate over deleted HL7s
-			ResultSet archives = connection.createStatement().executeQuery(getDeletedHL7sSql.toString());
-			while (archives.next()) {
+			try (Statement selectStatement = connection.createStatement();
+			        ResultSet archives = selectStatement.executeQuery(getDeletedHL7sSql.toString())) {
+				while (archives.next()) {
 
-				// add to the queue
-				insertStatement.setString(1, archives.getString(1)); // set hl7_source
-				insertStatement.setString(2, archives.getString(2)); // set hl7_source_key
-				insertStatement.setString(3, archives.getString(3)); // set hl7_data
-				insertStatement.setDate(4, archives.getDate(4)); // set date_created
-				insertStatement.setString(5, archives.getString(5)); // set uuid
-				insertStatement.executeUpdate();
+					// add to the queue
+					insertStatement.setString(1, archives.getString(1)); // set hl7_source
+					insertStatement.setString(2, archives.getString(2)); // set hl7_source_key
+					insertStatement.setString(3, archives.getString(3)); // set hl7_data
+					insertStatement.setDate(4, archives.getDate(4)); // set date_created
+					insertStatement.setString(5, archives.getString(5)); // set uuid
+					insertStatement.executeUpdate();
 
-				// remove from the archives
-				deleteStatement.setInt(1, archives.getInt(6));
-				deleteStatement.executeUpdate();
+					// remove from the archives
+					deleteStatement.setInt(1, archives.getInt(6));
+					deleteStatement.executeUpdate();
+				}
 			}
 
 			// cleanup

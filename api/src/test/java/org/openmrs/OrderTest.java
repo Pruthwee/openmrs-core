@@ -10,8 +10,8 @@
 package org.openmrs;
 
 import java.lang.reflect.Field;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -47,13 +47,23 @@ public class OrderTest extends BaseContextSensitiveTest {
 
 	private final static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
 
-	private DateFormat ymd;
+	private YmdParser ymd;
+
+	/**
+	 * Parses yyyy-MM-dd strings to a Date at the start of the day in the default time zone
+	 */
+	private static class YmdParser {
+
+		Date parse(String source) {
+			return Date.from(LocalDate.parse(source).atStartOfDay(ZoneId.systemDefault()).toInstant());
+		}
+	}
 
 	private Order o;
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		ymd = new SimpleDateFormat("yyyy-MM-dd");
+		ymd = new YmdParser();
 		o = new Order();
 	}
 

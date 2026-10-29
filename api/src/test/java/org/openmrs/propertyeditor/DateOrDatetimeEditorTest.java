@@ -9,9 +9,11 @@
  */
 package org.openmrs.propertyeditor;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,7 +25,11 @@ public class DateOrDatetimeEditorTest {
 
 	DateOrDatetimeEditor ed;
 
-	DateFormat ymdhm = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+	DateTimeFormatter ymdhm = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+	private Date parse(String text) {
+		return Date.from(LocalDateTime.parse(text, ymdhm).atZone(ZoneId.systemDefault()).toInstant());
+	}
 
 	@BeforeEach
 	public void before() {
@@ -36,7 +42,7 @@ public class DateOrDatetimeEditorTest {
 	 */
 	@Test
 	public void getAsText_shouldPrintDateWithoutTime() throws ParseException {
-		ed.setValue(ymdhm.parse("2011-10-27 00:00"));
+		ed.setValue(parse("2011-10-27 00:00"));
 		assertEquals("27/10/2011", ed.getAsText());
 	}
 
@@ -46,7 +52,7 @@ public class DateOrDatetimeEditorTest {
 	 */
 	@Test
 	public void getAsText_shouldPrintDateAndTimeWithTime() throws ParseException {
-		ed.setValue(ymdhm.parse("2011-10-27 17:59"));
+		ed.setValue(parse("2011-10-27 17:59"));
 		assertEquals("27/10/2011 17:59", ed.getAsText());
 	}
 
@@ -57,7 +63,7 @@ public class DateOrDatetimeEditorTest {
 	@Test
 	public void setAsText_shouldHandleDate() throws ParseException {
 		ed.setAsText("27/10/2011");
-		assertEquals(ymdhm.parse("2011-10-27 00:00"), ed.getValue());
+		assertEquals(parse("2011-10-27 00:00"), ed.getValue());
 	}
 
 	/**
@@ -67,7 +73,7 @@ public class DateOrDatetimeEditorTest {
 	@Test
 	public void setAsText_shouldHandleDateAndTime() throws ParseException {
 		ed.setAsText("27/10/2011 17:59");
-		assertEquals(ymdhm.parse("2011-10-27 17:59"), ed.getValue());
+		assertEquals(parse("2011-10-27 17:59"), ed.getValue());
 	}
 
 	/**

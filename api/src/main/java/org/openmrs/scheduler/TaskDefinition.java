@@ -9,6 +9,7 @@
  */
 package org.openmrs.scheduler;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -304,7 +305,7 @@ public class TaskDefinition extends BaseChangeableOpenmrsMetadata implements Tas
 	 * @return the number of seconds until the next execution
 	 */
 	public long getSecondsUntilNextExecutionTime() {
-		return (getNextExecutionTime().getTime() - System.currentTimeMillis()) / 1000;
+		return (getNextExecutionTime().getTime() - Instant.now().toEpochMilli()) / 1000;
 
 	}
 

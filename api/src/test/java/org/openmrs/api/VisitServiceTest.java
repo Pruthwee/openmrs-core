@@ -10,12 +10,17 @@
 package org.openmrs.api;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -285,7 +290,7 @@ public class VisitServiceTest extends BaseContextSensitiveTest {
 		executeDataSet(VISITS_ATTRIBUTES_XML);
 		Visit visit = new Visit(new Patient(2), new VisitType(3), new Date());
 		visit.setAttribute(createVisitAttribute(new Date()));
-		visit.setAttribute(createVisitAttribute(new Date(System.currentTimeMillis() - 1000000)));
+		visit.setAttribute(createVisitAttribute(Date.from(Instant.now().minusMillis(1000000))));
 		assertEquals(1, visit.getAttributes().size());
 
 		visit = visitService.saveVisit(visit);
@@ -496,7 +501,7 @@ public class VisitServiceTest extends BaseContextSensitiveTest {
 	public void getVisits_shouldGetVisitsEndedBetweenTheGivenEndDates() {
 		executeDataSet(VISITS_WITH_DATES_XML);
 
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(2005, Calendar.FEBRUARY, 1, 0, 0, 0);
 		Date minEndDate = cal.getTime();
 		cal.set(2005, Calendar.FEBRUARY, 2, 23, 59, 0);
@@ -514,7 +519,7 @@ public class VisitServiceTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getVisits_shouldGetVisitsThatAreStillOpenEvenIfMinStartDatetimeIsSpecified() throws ParseException {
-		Date minEndDatetime = new SimpleDateFormat("yyyy-MM-dd").parse("2061-01-01");
+		Date minEndDatetime = Date.from(LocalDate.parse("2061-01-01").atStartOfDay(ZoneId.systemDefault()).toInstant());
 		// this should get all open non-voided visits (which are ids 1, 2, 3, 4, 5 in standardTestDataset)
 		List<Visit> visits = visitService.getVisits(null, null, null, null, null, null, minEndDatetime, null, null, true,
 		    false);
@@ -531,7 +536,7 @@ public class VisitServiceTest extends BaseContextSensitiveTest {
 	public void getVisits_shouldGetVisitsStartedBetweenTheGivenStartDates() {
 		executeDataSet(VISITS_WITH_DATES_XML);
 
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(2005, Calendar.JANUARY, 1, 1, 0, 0);
 		Date minStartDate = cal.getTime();
 		cal.set(2005, Calendar.JANUARY, 1, 4, 0, 0);
@@ -700,7 +705,7 @@ public class VisitServiceTest extends BaseContextSensitiveTest {
 	public void getVisits_shouldGetAllVisitsWithGivenAttributeValues() throws ParseException {
 		executeDataSet(VISITS_ATTRIBUTES_XML);
 		Map<VisitAttributeType, Object> attrs = new HashMap<>();
-		attrs.put(visitService.getVisitAttributeType(1), new SimpleDateFormat("yyyy-MM-dd").parse("2011-04-25"));
+		attrs.put(visitService.getVisitAttributeType(1), Date.from(LocalDate.parse("2011-04-25").atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		List<Visit> visits = visitService.getVisits(null, null, null, null, null, null, null, null, attrs, true, false);
 		assertEquals(1, visits.size());
 		assertEquals(Integer.valueOf(1), visits.get(0).getVisitId());
@@ -710,7 +715,7 @@ public class VisitServiceTest extends BaseContextSensitiveTest {
 	public void getVisits_shouldNotFindAnyVisitsIfNoneHaveGivenAttributeValues() throws ParseException {
 		executeDataSet(VISITS_ATTRIBUTES_XML);
 		Map<VisitAttributeType, Object> attrs = new HashMap<>();
-		attrs.put(visitService.getVisitAttributeType(1), new SimpleDateFormat("yyyy-MM-dd").parse("1411-04-25"));
+		attrs.put(visitService.getVisitAttributeType(1), Date.from(LocalDate.parse("1411-04-25").atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		List<Visit> visits = visitService.getVisits(null, null, null, null, null, null, null, null, attrs, true, false);
 		assertEquals(0, visits.size());
 	}
@@ -849,7 +854,8 @@ public class VisitServiceTest extends BaseContextSensitiveTest {
 		attr.setValue(now);
 		visit.addAttribute(attr);
 		visitService.saveVisit(visit);
-		assertEquals(new SimpleDateFormat("yyyy-MM-dd").format(now), attr.getValueReference());
+		assertEquals(DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault()).format(now.toInstant()),
+		    attr.getValueReference());
 	}
 
 	@Test

@@ -9,9 +9,12 @@
  */
 package org.openmrs.api.context;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -140,7 +143,8 @@ public class ServiceContextTest extends BaseContextSensitiveTest {
 
 		serviceContext.startRefreshingContext();
 
-		Thread lookup = new Thread(() -> {
+		ExecutorService lookupExecutor = Executors.newFixedThreadPool(1);
+		lookupExecutor.submit(() -> {
 			try {
 				retrievedService.set(serviceContext.getService(PatientService.class));
 			} catch (Throwable t) {
@@ -149,7 +153,6 @@ public class ServiceContextTest extends BaseContextSensitiveTest {
 				lookupComplete.countDown();
 			}
 		});
-		lookup.start();
 
 		try {
 			// the lookup must not complete while the refresh is in progress; a broken (non-blocking)
@@ -157,6 +160,7 @@ public class ServiceContextTest extends BaseContextSensitiveTest {
 			assertFalse(lookupComplete.await(500, TimeUnit.MILLISECONDS));
 		} finally {
 			serviceContext.doneRefreshingContext();
+			lookupExecutor.shutdown();
 		}
 
 		// once the refresh finishes, the blocked lookup should complete
@@ -174,27 +178,32 @@ public class ServiceContextTest extends BaseContextSensitiveTest {
 		AtomicReference<Throwable> thrown = new AtomicReference<>();
 		CountDownLatch readerRunning = new CountDownLatch(1);
 
-		Thread reader = new Thread(() -> {
-			readerRunning.countDown();
-			long deadline = System.currentTimeMillis() + 5000;
-			while (System.currentTimeMillis() < deadline) {
-				try {
-					retrievedService.set(serviceContext.getService(RegistryVisibilityService.class));
-					return;
-				} catch (ServiceNotFoundException ignored) {
-					// not registered yet; keep racing the write
-				} catch (Throwable t) {
-					thrown.set(t);
-					return;
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		try {
+			executor.submit(() -> {
+				readerRunning.countDown();
+				long deadline = Instant.now().toEpochMilli() + 5000;
+				while (Instant.now().toEpochMilli() < deadline) {
+					try {
+						retrievedService.set(serviceContext.getService(RegistryVisibilityService.class));
+						return;
+					} catch (ServiceNotFoundException ignored) {
+						// not registered yet; keep racing the write
+					} catch (Throwable t) {
+						thrown.set(t);
+						return;
+					}
 				}
-			}
-		});
-		reader.start();
+			});
 
-		assertTrue(readerRunning.await(5, TimeUnit.SECONDS));
-		serviceContext.setService(RegistryVisibilityService.class, new RegistryVisibilityServiceImpl());
+			assertTrue(readerRunning.await(5, TimeUnit.SECONDS));
+			serviceContext.setService(RegistryVisibilityService.class, new RegistryVisibilityServiceImpl());
 
-		reader.join(5000);
+			executor.shutdown();
+			executor.awaitTermination(5, TimeUnit.SECONDS);
+		} finally {
+			executor.shutdown();
+		}
 
 		assertNull(thrown.get());
 		assertNotNull(retrievedService.get());

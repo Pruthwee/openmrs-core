@@ -9,6 +9,7 @@
  */
 package org.openmrs.scheduler.tasks;
 
+import java.time.Instant;
 import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -59,7 +60,7 @@ class AutoRetireUsersTaskTest extends BaseContextSensitiveTest {
 
 		User user = getDefaultUser();
 		userService.setUserProperty(user, OpenmrsConstants.USER_PROPERTY_LAST_LOGIN_TIMESTAMP,
-		    String.valueOf((System.currentTimeMillis() - TWO_DAYS_IN_MILLISECONDS)));
+		    String.valueOf((Instant.now().toEpochMilli() - TWO_DAYS_IN_MILLISECONDS)));
 
 		user.getAllRoles().forEach(user::removeRole);
 
@@ -76,7 +77,7 @@ class AutoRetireUsersTaskTest extends BaseContextSensitiveTest {
 
 		User user = getDefaultUser();
 		userService.setUserProperty(user, OpenmrsConstants.USER_PROPERTY_LAST_LOGIN_TIMESTAMP,
-		    String.valueOf((System.currentTimeMillis() - ONE_DAY_IN_MILLISECONDS)));
+		    String.valueOf((Instant.now().toEpochMilli() - ONE_DAY_IN_MILLISECONDS)));
 
 		user.getAllRoles().forEach(user::removeRole);
 
@@ -94,7 +95,7 @@ class AutoRetireUsersTaskTest extends BaseContextSensitiveTest {
 
 		User retiredUser = userService.getUser(1);
 		userService.setUserProperty(retiredUser, OpenmrsConstants.USER_PROPERTY_LAST_LOGIN_TIMESTAMP,
-		    String.valueOf((System.currentTimeMillis() - TWO_DAYS_IN_MILLISECONDS)));
+		    String.valueOf((Instant.now().toEpochMilli() - TWO_DAYS_IN_MILLISECONDS)));
 
 		retiredUser.getAllRoles().forEach(retiredUser::removeRole);
 
@@ -119,7 +120,7 @@ class AutoRetireUsersTaskTest extends BaseContextSensitiveTest {
 
 		user.getAllRoles().forEach(user::removeRole);
 
-		user.setDateCreated(new Date(System.currentTimeMillis() - TWENTY_THREE_HOURS_IN_MILLISECONDS));
+		user.setDateCreated(Date.from(Instant.now().minusMillis(TWENTY_THREE_HOURS_IN_MILLISECONDS)));
 
 		autoRetireUsersTask.execute();
 
@@ -135,7 +136,7 @@ class AutoRetireUsersTaskTest extends BaseContextSensitiveTest {
 
 		user.getAllRoles().forEach(user::removeRole);
 
-		user.setDateCreated(new Date(System.currentTimeMillis() - TWO_DAYS_IN_MILLISECONDS));
+		user.setDateCreated(Date.from(Instant.now().minusMillis(TWO_DAYS_IN_MILLISECONDS)));
 
 		autoRetireUsersTask.execute();
 
@@ -150,7 +151,7 @@ class AutoRetireUsersTaskTest extends BaseContextSensitiveTest {
 
 		User adminUser = userService.getUser(1);
 		userService.setUserProperty(adminUser, OpenmrsConstants.USER_PROPERTY_LAST_LOGIN_TIMESTAMP,
-		    String.valueOf((System.currentTimeMillis() - TWO_DAYS_IN_MILLISECONDS)));
+		    String.valueOf((Instant.now().toEpochMilli() - TWO_DAYS_IN_MILLISECONDS)));
 
 		autoRetireUsersTask.execute();
 

@@ -20,6 +20,10 @@ import java.net.URL;
  */
 public class HttpUrl {
 
+	private static final int CONNECT_TIMEOUT_MS = 5000;
+
+	private static final int READ_TIMEOUT_MS = 30000;
+
 	private final URL url;
 
 	public HttpUrl(String url) throws MalformedURLException {
@@ -33,7 +37,10 @@ public class HttpUrl {
 	}
 
 	public HttpURLConnection openConnection() throws IOException {
-		return (HttpURLConnection) url.openConnection();
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+		connection.setReadTimeout(READ_TIMEOUT_MS);
+		return connection;
 	}
 
 	@Override

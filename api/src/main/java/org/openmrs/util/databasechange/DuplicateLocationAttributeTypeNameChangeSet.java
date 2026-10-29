@@ -16,8 +16,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -74,7 +76,6 @@ public class DuplicateLocationAttributeTypeNameChangeSet implements CustomTaskCh
 	public void execute(Database database) throws CustomChangeException {
 		JdbcConnection connection = (JdbcConnection) database.getConnection();
 		Map<String, HashSet<Integer>> duplicates = new HashMap<>();
-		Statement stmt = null;
 		PreparedStatement pStmt = null;
 		ResultSet rs = null;
 		boolean autoCommit = true;
@@ -82,23 +83,24 @@ public class DuplicateLocationAttributeTypeNameChangeSet implements CustomTaskCh
 			// set auto commit mode to false for UPDATE action
 			autoCommit = connection.getAutoCommit();
 			connection.setAutoCommit(false);
-			stmt = connection.createStatement();
-			rs = stmt.executeQuery("SELECT * FROM location_attribute_type "
-			        + "INNER JOIN (SELECT name FROM location_attribute_type GROUP BY name HAVING count(name) > 1) "
-			        + "dup ON location_attribute_type.name = dup.name");
-			Integer id;
-			String name;
+			try (Statement stmt = connection.createStatement()) {
+				rs = stmt.executeQuery("SELECT * FROM location_attribute_type "
+				        + "INNER JOIN (SELECT name FROM location_attribute_type GROUP BY name HAVING count(name) > 1) "
+				        + "dup ON location_attribute_type.name = dup.name");
+				Integer id;
+				String name;
 
-			while (rs.next()) {
-				id = rs.getInt("location_attribute_type_id");
-				name = rs.getString("name");
-				if (duplicates.get(name) == null) {
-					HashSet<Integer> results = new HashSet<>();
-					results.add(id);
-					duplicates.put(name, results);
-				} else {
-					HashSet<Integer> results = duplicates.get(name);
-					results.add(id);
+				while (rs.next()) {
+					id = rs.getInt("location_attribute_type_id");
+					name = rs.getString("name");
+					if (duplicates.get(name) == null) {
+						HashSet<Integer> results = new HashSet<>();
+						results.add(id);
+						duplicates.put(name, results);
+					} else {
+						HashSet<Integer> results = duplicates.get(name);
+						results.add(id);
+					}
 				}
 			}
 
@@ -131,7 +133,7 @@ public class DuplicateLocationAttributeTypeNameChangeSet implements CustomTaskCh
 					pStmt.setString(1, newName);
 					pStmt.setInt(2, DatabaseUpdater.getAuthenticatedUserId());
 
-					Calendar cal = Calendar.getInstance();
+					Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 					Date date = new Date(cal.getTimeInMillis());
 
 					pStmt.setDate(3, date);
@@ -167,15 +169,6 @@ public class DuplicateLocationAttributeTypeNameChangeSet implements CustomTaskCh
 					rs.close();
 				} catch (SQLException e) {
 					log.warn("Failed to close the resultset object");
-				}
-			}
-
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn(
-					    "Failed to close the select statement used to identify duplicate LocationAttributeType object names");
 				}
 			}
 

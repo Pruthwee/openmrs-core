@@ -9,8 +9,8 @@
  */
 package org.openmrs;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.UUID;
 
@@ -41,8 +41,6 @@ public class ConditionTest {
 
 	String text2 = "Text 2";
 
-	DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
-
 	@BeforeEach
 	public void before() throws Exception {
 		baseCondition.setConditionId(1234);
@@ -53,8 +51,8 @@ public class ConditionTest {
 		baseCondition.setEncounter(null);
 		baseCondition.setAdditionalDetail(text1);
 		baseCondition.setFormNamespaceAndPath(text1);
-		baseCondition.setOnsetDate(df.parse("2022-03-22"));
-		baseCondition.setEndDate(df.parse("2023-01-19"));
+		baseCondition.setOnsetDate(Date.from(LocalDate.parse("2022-03-22").atStartOfDay(ZoneId.systemDefault()).toInstant()));
+		baseCondition.setEndDate(Date.from(LocalDate.parse("2023-01-19").atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		baseCondition.setEndReason(text1);
 		baseCondition.setClinicalStatus(ConditionClinicalStatus.ACTIVE);
 		baseCondition.setVerificationStatus(ConditionVerificationStatus.PROVISIONAL);

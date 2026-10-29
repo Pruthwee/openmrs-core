@@ -9,8 +9,10 @@
  */
 package org.openmrs.scheduler;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +49,7 @@ public class SchedulerUtil {
 	 */
 	@Deprecated
 	public static Date getNextExecution(TaskDefinition taskDefinition) {
-		Calendar nextTime = Calendar.getInstance();
+		Calendar nextTime = GregorianCalendar.from(ZonedDateTime.now());
 
 		try {
 			Date firstTime = taskDefinition.getStartTime();

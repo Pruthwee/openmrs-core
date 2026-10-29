@@ -32,8 +32,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -511,9 +512,10 @@ public abstract class BaseContextSensitiveNonTransactionalTest {
 		frame.setVisible(true);
 		frame.setTitle("JUnit Test Credentials");
 
-		// We use a TimerTask to force focus on username, but still use
+		// We use a scheduled task to force focus on username, but still use
 		// JOptionPane for model dialog
-		TimerTask later = new TimerTask() {
+		ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+		Runnable later = new Runnable() {
 
 			@Override
 			public void run() {
@@ -525,10 +527,10 @@ public abstract class BaseContextSensitiveNonTransactionalTest {
 			}
 		};
 		// try setting focus half a second from now
-		new Timer().schedule(later, 500);
+		scheduler.schedule(later, 500, TimeUnit.MILLISECONDS);
 
 		// attention grabber for those people that aren't as observant
-		TimerTask laterStill = new TimerTask() {
+		Runnable laterStill = new Runnable() {
 
 			@Override
 			public void run() {
@@ -541,13 +543,13 @@ public abstract class BaseContextSensitiveNonTransactionalTest {
 		};
 		// if the user hasn't done anything in 10 seconds, tell them the window
 		// is there
-		new Timer().schedule(laterStill, 10000);
+		scheduler.schedule(laterStill, 10000, TimeUnit.MILLISECONDS);
 
 		// show the dialog box
 		int response = JOptionPane.showConfirmDialog(window, panel, message, JOptionPane.OK_CANCEL_OPTION);
 
-		// clear out the window so the timer doesn't screw up
-		laterStill.cancel();
+		// clear out the window so the scheduled tasks don't screw up
+		scheduler.shutdownNow();
 		frame.setVisible(false);
 		window.setVisible(false);
 		frame = null;

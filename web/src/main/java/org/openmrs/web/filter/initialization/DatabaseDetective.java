@@ -27,6 +27,8 @@ public class DatabaseDetective {
 
 	private static final String CONNECTION_PASSWORD = "connection.password";
 
+	private static final int JDBC_CONNECT_TIMEOUT_MS = 5000;
+
 	/**
 	 * Check whether openmrs database is empty. Having just one non-liquibase table in the given
 	 * database qualifies this as a non-empty database.
@@ -45,8 +47,22 @@ public class DatabaseDetective {
 			DatabaseUtil.loadDatabaseDriver(props.getProperty(CONNECTION_URL),
 			    props.getProperty(CONNECTION_DRIVER_CLASS, null));
 
-			connection = DriverManager.getConnection(props.getProperty(CONNECTION_URL),
-			    props.getProperty(CONNECTION_USERNAME), props.getProperty(CONNECTION_PASSWORD));
+			String url = props.getProperty(CONNECTION_URL);
+			String username = props.getProperty(CONNECTION_USERNAME);
+			String password = props.getProperty(CONNECTION_PASSWORD);
+			if (url != null && (url.startsWith("jdbc:mysql:") || url.startsWith("jdbc:mariadb:"))) {
+				Properties connectionProps = new Properties();
+				if (username != null) {
+					connectionProps.setProperty("user", username);
+				}
+				if (password != null) {
+					connectionProps.setProperty("password", password);
+				}
+				connectionProps.setProperty("connectTimeout", String.valueOf(JDBC_CONNECT_TIMEOUT_MS));
+				connection = DriverManager.getConnection(url, connectionProps);
+			} else {
+				connection = DriverManager.getConnection(url, username, password);
+			}
 
 			DatabaseMetaData dbMetaData = connection.getMetaData();
 

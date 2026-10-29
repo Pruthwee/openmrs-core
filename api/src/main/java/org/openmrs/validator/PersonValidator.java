@@ -9,8 +9,10 @@
  */
 package org.openmrs.validator;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.openmrs.Person;
 import org.openmrs.PersonAddress;
@@ -204,7 +206,7 @@ public class PersonValidator implements Validator {
 	 * @param dateField the name of the field
 	 */
 	private void rejectDateIfBefore140YearsAgo(Errors errors, Date date, String dateField) {
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		c.setTime(new Date());
 		c.add(Calendar.YEAR, -140);
 		if (OpenmrsUtil.compare(date, c.getTime()) < 0) {

@@ -11,7 +11,8 @@ package org.openmrs.attribute;
 
 import java.sql.Date;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,7 +50,7 @@ public class AttributeIntegrationTest extends BaseContextSensitiveTest {
 		VisitAttribute legalDate = new VisitAttribute();
 		legalDate.setAttributeType(auditDate);
 		// try using a subclass of java.util.Date, to make sure the handler can take subclasses.
-		legalDate.setValue(new Date(new SimpleDateFormat("yyyy-MM-dd").parse("2011-04-15").getTime()));
+		legalDate.setValue(new Date(LocalDate.parse("2011-04-15").atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()));
 		visit.addAttribute(legalDate);
 
 		service.saveVisit(visit);

@@ -12,6 +12,7 @@ package org.openmrs.api.db.hibernate;
 import java.io.File;
 import java.net.URL;
 import java.sql.Connection;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,14 +141,14 @@ public class HibernateContextDAO implements ContextDAO {
 				// unlock them after x mins, otherwise reset the timestamp
 				// to now and make them wait another x mins
 				final Long unlockTime = getUnlockTimeMs();
-				if (System.currentTimeMillis() - lockoutTime > unlockTime) {
+				if (Instant.now().toEpochMilli() - lockoutTime > unlockTime) {
 					candidateUser.setUserProperty(OpenmrsConstants.USER_PROPERTY_LOGIN_ATTEMPTS,
 					    OpenmrsConstants.ZERO_LOGIN_ATTEMPTS_VALUE);
 					candidateUser.removeUserProperty(OpenmrsConstants.USER_PROPERTY_LOCKOUT_TIMESTAMP);
 					saveUserProperties(candidateUser);
 				} else {
 					candidateUser.setUserProperty(OpenmrsConstants.USER_PROPERTY_LOCKOUT_TIMESTAMP,
-					    String.valueOf(System.currentTimeMillis()));
+					    String.valueOf(Instant.now().toEpochMilli()));
 					throw new ContextAuthenticationException(
 					        "Invalid number of connection attempts. Please try again later.");
 				}
@@ -203,7 +204,7 @@ public class HibernateContextDAO implements ContextDAO {
 				if (attempts > allowedFailedLoginCount) {
 					// set the user as locked out at this exact time
 					candidateUser.setUserProperty(OpenmrsConstants.USER_PROPERTY_LOCKOUT_TIMESTAMP,
-					    String.valueOf(System.currentTimeMillis()));
+					    String.valueOf(Instant.now().toEpochMilli()));
 				} else {
 					candidateUser.setUserProperty(OpenmrsConstants.USER_PROPERTY_LOGIN_ATTEMPTS, String.valueOf(attempts));
 				}
@@ -220,7 +221,7 @@ public class HibernateContextDAO implements ContextDAO {
 
 	private void setLastLoginTime(User candidateUser) {
 		candidateUser.setUserProperty(OpenmrsConstants.USER_PROPERTY_LAST_LOGIN_TIMESTAMP,
-		    String.valueOf(System.currentTimeMillis()));
+		    String.valueOf(Instant.now().toEpochMilli()));
 	}
 
 	private Long getUnlockTimeMs() {

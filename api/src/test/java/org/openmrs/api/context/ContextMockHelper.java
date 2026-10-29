@@ -9,7 +9,9 @@
  */
 package org.openmrs.api.context;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -123,7 +125,7 @@ public class ContextMockHelper {
 		person.setUuid("6adb7c42-cfd2-4301-b53b-ff17c5654ff7");
 		person.setId(1);
 		person.addName(new PersonName("Bob", "", "Smith"));
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.set(1980, 01, 01);
 		person.setBirthdate(calendar.getTime());
 		person.setGender("M");

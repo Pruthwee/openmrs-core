@@ -14,6 +14,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,7 +63,7 @@ public class CreateDiscontinueOrders implements CustomTaskChange {
 				insertStatement.setInt(3, discontinuedOrder.patientId);
 				setIntOrNull(insertStatement, 4, discontinuedOrder.encounterId);
 				insertStatement.setInt(5, discontinuedOrder.discontinuedById);
-				insertStatement.setDate(6, new Date(System.currentTimeMillis()));
+				insertStatement.setDate(6, new Date(Instant.now().toEpochMilli()));
 				setIntOrNull(insertStatement, 7, discontinuedOrder.discontinuedReasonId);
 				insertStatement.setString(8, discontinuedOrder.discontinuedReasonNonCoded);
 				insertStatement.setString(9, UuidUtil.newUuidString());

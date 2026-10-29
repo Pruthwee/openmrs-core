@@ -10,11 +10,13 @@
 package org.openmrs.api.impl;
 
 import java.lang.reflect.Field;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -357,7 +359,7 @@ public class OrderServiceImpl extends BaseOpenmrsService implements OrderService
 			if (DISCONTINUE == order.getAction()) {
 				order.setAutoExpireDate(order.getDateActivated());
 			} else if (order.getAutoExpireDate() != null) {
-				Calendar cal = Calendar.getInstance();
+				Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 				cal.setTime(order.getAutoExpireDate());
 				int hours = cal.get(Calendar.HOUR_OF_DAY);
 				int minutes = cal.get(Calendar.MINUTE);

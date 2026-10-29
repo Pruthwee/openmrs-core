@@ -9,7 +9,11 @@
  */
 package org.openmrs;
 
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -35,6 +39,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CohortTest {
 
 	private Integer[] ids = { 1, 2, 3 };
+
+	private static Date parseDateTime(String s) {
+		return Date.from(LocalDateTime.parse(s, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+		        .atZone(ZoneId.systemDefault()).toInstant());
+	}
 
 	@Test
 	public void constructorWithIntegers_shouldAddMembersToCohort() {
@@ -79,9 +88,8 @@ public class CohortTest {
 
 	@Test
 	public void union_shouldContainVoidedAndExpiredMemberships() throws Exception {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2017-01-01 00:00:00");
-		Date endDate = dateFormat.parse("2017-02-01 00:00:00");
+		Date startDate = parseDateTime("2017-01-01 00:00:00");
+		Date endDate = parseDateTime("2017-02-01 00:00:00");
 
 		Cohort cohortOne = new Cohort(3);
 		CohortMembership membershipOne = new CohortMembership(7, startDate);
@@ -105,9 +113,8 @@ public class CohortTest {
 
 	@Test
 	public void subtract_shouldContainVoidedAndExpiredMemberships() throws Exception {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2017-01-01 00:00:00");
-		Date endDate = dateFormat.parse("2017-02-01 00:00:00");
+		Date startDate = parseDateTime("2017-01-01 00:00:00");
+		Date endDate = parseDateTime("2017-02-01 00:00:00");
 
 		Cohort cohortOne = new Cohort(3);
 		CohortMembership membershipOne = new CohortMembership(7, startDate);
@@ -131,9 +138,8 @@ public class CohortTest {
 
 	@Test
 	public void intersect_shouldContainVoidedAndExpiredMemberships() throws Exception {
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2017-01-01 00:00:00");
-		Date endDate = dateFormat.parse("2017-02-01 00:00:00");
+		Date startDate = parseDateTime("2017-01-01 00:00:00");
+		Date endDate = parseDateTime("2017-02-01 00:00:00");
 
 		Cohort cohortOne = new Cohort(3);
 		CohortMembership membershipOne = new CohortMembership(7, startDate);
@@ -165,9 +171,9 @@ public class CohortTest {
 		for (int i = 0; i < cohortSize; i++) {
 			ids.add(i);
 		}
-		long startTime = System.currentTimeMillis();
+		long startTime = Instant.now().toEpochMilli();
 		c.setMemberIds(ids);
-		long endTime = System.currentTimeMillis();
+		long endTime = Instant.now().toEpochMilli();
 		double secondsToSet = (endTime - startTime) / 1000;
 		assertTrue(secondsToSet < 5, "Setting cohort of size " + cohortSize + " took " + secondsToSet + " seconds");
 	}
@@ -219,7 +225,7 @@ public class CohortTest {
 	@Test
 	public void hasActiveMembership_shouldFindAnActiveMemberCorrectly() throws Exception {
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, 1);
 		// endDateLater will be tomorrow
 		Date endDateLater = calendar.getTime();
@@ -254,7 +260,7 @@ public class CohortTest {
 	@Test
 	public void activeMembershipSize_shouldDetermineSizeCorrectly() throws Exception {
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, 1);
 		// endDateLater will be tomorrow
 		Date endDateLater = calendar.getTime();
@@ -287,7 +293,7 @@ public class CohortTest {
 	@Test
 	public void hasNoActiveMemberships_shouldReturnTrueIfNoneExists() throws Exception {
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, 1);
 		// endDateLater will be tomorrow
 		Date endDateLater = calendar.getTime();
@@ -319,7 +325,7 @@ public class CohortTest {
 	@Test
 	public void hasNoActiveMemberships_shouldReturnFalseIfOneExists() throws Exception {
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_YEAR, 1);
 		// endDateLater will be tomorrow
 		Date endDateLater = calendar.getTime();

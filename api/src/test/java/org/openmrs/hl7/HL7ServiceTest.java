@@ -11,7 +11,9 @@ package org.openmrs.hl7;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
@@ -162,7 +164,7 @@ public class HL7ServiceTest extends BaseContextSensitiveTest {
 		assertNotNull(result);
 
 		Concept returnVisitDateConcept = new Concept(5096);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(2008, Calendar.FEBRUARY, 29, 0, 0, 0);
 		List<Obs> returnVisitDateObsForPatient3 = Context.getObsService().getObservationsByPersonAndConcept(new Patient(3),
 		    returnVisitDateConcept);

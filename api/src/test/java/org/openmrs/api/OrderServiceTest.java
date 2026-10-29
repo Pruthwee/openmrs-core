@@ -9,9 +9,13 @@
  */
 package org.openmrs.api;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -970,7 +974,7 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void discontinueOrder_shouldRejectAFutureDiscontinueDate() {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.add(Calendar.HOUR_OF_DAY, 1);
 		Patient patient = Context.getPatientService().getPatient(2);
 		CareSetting careSetting = orderService.getCareSetting(1);
@@ -987,7 +991,7 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void discontinueOrder_shouldFailIfDiscontinueDateIsInTheFuture() {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.add(Calendar.HOUR_OF_DAY, 1);
 		Order orderToDiscontinue = orderService
 		        .getActiveOrders(Context.getPatientService().getPatient(2), null, orderService.getCareSetting(1), null)
@@ -2028,13 +2032,11 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 		order.setConcept(conceptService.getConcept(5089));
 		order.setEncounter(encounterService.getEncounter(6));
 		order.setOrderer(providerService.getProvider(1));
-		DateFormat dateformat = new SimpleDateFormat("dd/MM/yyyy");
-		order.setDateActivated(dateformat.parse("14/08/2014"));
-		order.setAutoExpireDate(dateformat.parse("18/08/2014"));
+		order.setDateActivated(parseDateOnly("14/08/2014", "dd/MM/yyyy"));
+		order.setAutoExpireDate(parseDateOnly("18/08/2014", "dd/MM/yyyy"));
 
 		orderService.saveOrder(order, null);
-		dateformat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss.S");
-		assertEquals(dateformat.parse("18/08/2014 23:59:59.000"), order.getAutoExpireDate());
+		assertEquals(parseDateTime("18/08/2014 23:59:59.000", "dd/MM/yyyy HH:mm:ss.SSS"), order.getAutoExpireDate());
 	}
 
 	/**
@@ -2050,9 +2052,8 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 		order.setEncounter(encounterService.getEncounter(6));
 		order.setOrderer(providerService.getProvider(1));
 		order.setDateActivated(new Date());
-		DateFormat dateformat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-		order.setDateActivated(dateformat.parse("14/08/2014 10:00:00"));
-		Date autoExpireDate = dateformat.parse("18/08/2014 10:00:00");
+		order.setDateActivated(parseDateTime("14/08/2014 10:00:00", "dd/MM/yyyy HH:mm:ss"));
+		Date autoExpireDate = parseDateTime("18/08/2014 10:00:00", "dd/MM/yyyy HH:mm:ss");
 		order.setAutoExpireDate(autoExpireDate);
 
 		orderService.saveOrder(order, null);
@@ -2351,7 +2352,7 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getOrders_shouldNotReturnCanceledOrAutoExpiredOrders() {
-		Date today = Calendar.getInstance().getTime();
+		Date today = GregorianCalendar.from(ZonedDateTime.now()).getTime();
 		OrderSearchCriteria orderSearchCriteria = new OrderSearchCriteriaBuilder().setExcludeCanceledAndExpired(true)
 		        .build();
 		List<Order> orders = orderService.getOrders(orderSearchCriteria);
@@ -3655,13 +3656,12 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 	@Test
 	public void saveRetrospectiveOrder_shouldDiscontinueOrderInRetrospectiveEntry() throws ParseException {
 		executeDataSet("org/openmrs/api/include/OrderServiceTest-ordersWithAutoExpireDate.xml");
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.S");
-		Date originalOrderDateActivated = dateFormat.parse("2008-11-19 09:24:10.0");
+		Date originalOrderDateActivated = parseDateTime("2008-11-19 09:24:10.0", "yyyy-MM-dd HH:mm:ss.S");
 		Date discontinuationOrderDate = DateUtils.addDays(originalOrderDateActivated, 2);
 
 		Order originalOrder = orderService.getOrder(201);
 		assertNull(originalOrder.getDateStopped());
-		assertEquals(dateFormat.parse("2008-11-23 09:24:09.0"), originalOrder.getAutoExpireDate());
+		assertEquals(parseDateTime("2008-11-23 09:24:09.0", "yyyy-MM-dd HH:mm:ss.S"), originalOrder.getAutoExpireDate());
 		assertFalse(originalOrder.isActive());
 		assertTrue(originalOrder.isActive(discontinuationOrderDate));
 
@@ -3679,13 +3679,12 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 	@Test
 	public void saveRetrospectiveOrder_shouldDiscontinueAndStopActiveOrderInRetrospectiveEntry() throws ParseException {
 		executeDataSet("org/openmrs/api/include/OrderServiceTest-ordersWithAutoExpireDate.xml");
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.S");
-		Date originalOrderDateActivated = dateFormat.parse("2008-11-19 09:24:10.0");
+		Date originalOrderDateActivated = parseDateTime("2008-11-19 09:24:10.0", "yyyy-MM-dd HH:mm:ss.S");
 		Date discontinuationOrderDate = DateUtils.addDays(originalOrderDateActivated, 2);
 
 		Order originalOrder = orderService.getOrder(202);
 		assertNull(originalOrder.getDateStopped());
-		assertEquals(dateFormat.parse("2008-11-23 09:24:09.0"), originalOrder.getAutoExpireDate());
+		assertEquals(parseDateTime("2008-11-23 09:24:09.0", "yyyy-MM-dd HH:mm:ss.S"), originalOrder.getAutoExpireDate());
 		assertFalse(originalOrder.isActive());
 		assertTrue(originalOrder.isActive(discontinuationOrderDate));
 
@@ -3704,7 +3703,7 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 	public void saveOrder_shouldNotRevisePreviousIfAlreadyStopped() throws ParseException {
 		executeDataSet("org/openmrs/api/include/OrderServiceTest-ordersWithAutoExpireDate.xml");
 		Order previousOrder = orderService.getOrder(203);
-		Date dateActivated = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2008-10-19 13:00:00");
+		Date dateActivated = parseDateTime("2008-10-19 13:00:00", "yyyy-MM-dd HH:mm:ss");
 		Order order = previousOrder.cloneForRevision();
 
 		order.setDateActivated(dateActivated);
@@ -3721,7 +3720,7 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 	public void saveRetrospectiveOrder_shouldFailIfAnActiveDrugOrderForTheSameConceptAndCareSettingExistsAtOrderDateActivated()
 	        throws ParseException {
 		executeDataSet("org/openmrs/api/include/OrderServiceTest-ordersWithAutoExpireDate.xml");
-		Date newOrderDateActivated = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2008-11-19 13:00:10");
+		Date newOrderDateActivated = parseDateTime("2008-11-19 13:00:10", "yyyy-MM-dd HH:mm:ss");
 		final Patient patient = patientService.getPatient(12);
 		final Concept orderConcept = conceptService.getConcept(88);
 		//sanity check that we have an active order for the same concept
@@ -4290,7 +4289,7 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 		o1.setDurationUnits(daysConcept); // days
 		e1.addOrder(o1);
 		encounterService.saveEncounter(e1);
-		assertThat(new SimpleDateFormat("yyyy-MM-dd").format(o1.getAutoExpireDate()), is("2008-09-29"));
+		assertThat(formatDate(o1.getAutoExpireDate(), "yyyy-MM-dd"), is("2008-09-29"));
 		assertThat(o1.getDateStopped(), is(nullValue()));
 
 		// Next, create a new Order on 8/15/2008 that revises the above order
@@ -4302,7 +4301,7 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 		o2.setDose(3d);
 		e2.addOrder(o2);
 		encounterService.saveEncounter(e2);
-		assertThat(new SimpleDateFormat("yyyy-MM-dd").format(o1.getDateStopped()), is("2008-08-14"));
+		assertThat(formatDate(o1.getDateStopped(), "yyyy-MM-dd"), is("2008-08-14"));
 	}
 
 	/**
@@ -4463,6 +4462,21 @@ public class OrderServiceTest extends BaseContextSensitiveTest {
 
 	private Date truncateToSeconds(Date date) {
 		return DateUtils.truncate(date, Calendar.SECOND);
+	}
+
+	private static Date parseDateTime(String text, String pattern) {
+		return Date.from(LocalDateTime.parse(text, DateTimeFormatter.ofPattern(pattern)).atZone(ZoneId.systemDefault())
+		        .toInstant());
+	}
+
+	private static Date parseDateOnly(String text, String pattern) {
+		return Date.from(LocalDate.parse(text, DateTimeFormatter.ofPattern(pattern)).atStartOfDay(ZoneId.systemDefault())
+		        .toInstant());
+	}
+
+	private static String formatDate(Date date, String pattern) {
+		return DateTimeFormatter.ofPattern(pattern).withZone(ZoneId.systemDefault())
+		        .format(Instant.ofEpochMilli(date.getTime()));
 	}
 
 	// Test-only subclass

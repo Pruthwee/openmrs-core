@@ -12,10 +12,10 @@ package org.openmrs.api.impl;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -780,9 +780,9 @@ public class AdministrationServiceImpl extends BaseOpenmrsService implements Adm
 
 			{
 				put("SystemInfo.OpenMRSInstallation.systemDate",
-				    new SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().getTime()));
+				    DateTimeFormatter.ofPattern("yyyy-MM-dd").format(ZonedDateTime.now()));
 				put("SystemInfo.OpenMRSInstallation.systemTime",
-				    new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime()));
+				    DateTimeFormatter.ofPattern("HH:mm:ss").format(ZonedDateTime.now()));
 				put("SystemInfo.OpenMRSInstallation.openmrsVersion", OpenmrsConstants.OPENMRS_VERSION);
 				try {
 					put("SystemInfo.hostname", InetAddress.getLocalHost().getCanonicalHostName());

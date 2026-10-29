@@ -9,8 +9,10 @@
  */
 package org.openmrs.scheduler;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +29,7 @@ public class SchedulerUtilTest {
 	public void getNextExecution_shouldGetTheCorrectRepeatInterval() {
 
 		// Represents the start time of the task (right now)
-		Calendar startTime = Calendar.getInstance();
+		Calendar startTime = GregorianCalendar.from(ZonedDateTime.now());
 
 		// Execute task every 4 minutes
 		Long repeatInterval = (long) (4 * 60);

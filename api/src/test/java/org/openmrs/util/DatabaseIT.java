@@ -84,8 +84,7 @@ public class DatabaseIT implements LiquibaseProvider {
 	}
 
 	protected void dropAllDatabaseObjects() throws SQLException {
-		try (Connection connection = getConnection()) {
-			Statement statement = connection.createStatement();
+		try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
 			if (useInMemoryDatabase()) {
 				String query = "DROP ALL OBJECTS";
 				statement.execute(query);

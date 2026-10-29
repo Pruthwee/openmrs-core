@@ -73,9 +73,7 @@ public class DuplicateEncounterTypeNameChangeSet implements CustomTaskChange {
 	public void execute(Database database) throws CustomChangeException {
 		JdbcConnection connection = (JdbcConnection) database.getConnection();
 		Map<String, HashSet<Integer>> duplicates = new HashMap<>();
-		Statement stmt = null;
 		PreparedStatement pStmt = null;
-		ResultSet rs = null;
 		Boolean initialAutoCommit = null;
 
 		try {
@@ -84,24 +82,25 @@ public class DuplicateEncounterTypeNameChangeSet implements CustomTaskChange {
 			// set auto commit mode to false for UPDATE action
 			connection.setAutoCommit(false);
 
-			stmt = connection.createStatement();
-			rs = stmt.executeQuery(
-			    "SELECT * FROM encounter_type INNER JOIN (SELECT name FROM encounter_type GROUP BY name HAVING count(name) > 1) dup ON encounter_type.name = dup.name");
+			try (Statement stmt = connection.createStatement();
+			        ResultSet rs = stmt.executeQuery(
+			            "SELECT * FROM encounter_type INNER JOIN (SELECT name FROM encounter_type GROUP BY name HAVING count(name) > 1) dup ON encounter_type.name = dup.name")) {
 
-			Integer id;
-			String name;
+				Integer id;
+				String name;
 
-			while (rs.next()) {
-				id = rs.getInt("encounter_type_id");
-				name = rs.getString("name");
+				while (rs.next()) {
+					id = rs.getInt("encounter_type_id");
+					name = rs.getString("name");
 
-				if (duplicates.get(name) == null) {
-					HashSet<Integer> results = new HashSet<>();
-					results.add(id);
-					duplicates.put(name, results);
-				} else {
-					HashSet<Integer> results = duplicates.get(name);
-					results.add(id);
+					if (duplicates.get(name) == null) {
+						HashSet<Integer> results = new HashSet<>();
+						results.add(id);
+						duplicates.put(name, results);
+					} else {
+						HashSet<Integer> results = duplicates.get(name);
+						results.add(id);
+					}
 				}
 			}
 
@@ -164,22 +163,6 @@ public class DuplicateEncounterTypeNameChangeSet implements CustomTaskChange {
 			} catch (DatabaseException e) {
 				log.warn("Failed to set auto commit to ids initial state", e);
 			}
-			if (rs != null) {
-				try {
-					rs.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the resultset object");
-				}
-			}
-
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the select statement used to identify duplicate EncounterType object names");
-				}
-			}
-
 			if (pStmt != null) {
 				try {
 					pStmt.close();

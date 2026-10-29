@@ -9,7 +9,7 @@
  */
 package org.openmrs;
 
-import java.util.Calendar;
+import java.time.Instant;
 import java.util.Date;
 
 import jakarta.persistence.Cacheable;
@@ -584,7 +584,7 @@ public class PersonAddress extends BaseChangeableOpenmrsData implements java.io.
 	 * @since 1.9
 	 */
 	public void deactivate() {
-		setEndDate(Calendar.getInstance().getTime());
+		setEndDate(Date.from(Instant.now()));
 	}
 
 	/**

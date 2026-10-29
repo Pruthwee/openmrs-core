@@ -13,6 +13,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.hibernate.SessionFactory;
 import org.junit.jupiter.api.Test;
@@ -72,21 +75,24 @@ public class OutboxEventServiceConcurrencyIT extends BaseContextSensitiveNonTran
 		    "lockEventForProcessing must refresh the committed progress, not return the stale cached read");
 	}
 
-	private void runInSeparateSession(Runnable action) throws InterruptedException {
+	private void runInSeparateSession(Runnable action) throws InterruptedException, ExecutionException {
 		List<Throwable> errors = Collections.synchronizedList(new ArrayList<>());
-		Thread thread = new Thread(() -> {
-			Context.openSession();
-			try {
-				Context.authenticate(getCredentials());
-				action.run();
-			} catch (Throwable t) {
-				errors.add(t);
-			} finally {
-				Context.closeSession();
-			}
-		});
-		thread.start();
-		thread.join();
+		ExecutorService executor = Executors.newFixedThreadPool(1);
+		try {
+			executor.submit(() -> {
+				Context.openSession();
+				try {
+					Context.authenticate(getCredentials());
+					action.run();
+				} catch (Throwable t) {
+					errors.add(t);
+				} finally {
+					Context.closeSession();
+				}
+			}).get();
+		} finally {
+			executor.shutdown();
+		}
 		if (!errors.isEmpty()) {
 			throw new RuntimeException("action in separate session failed", errors.get(0));
 		}

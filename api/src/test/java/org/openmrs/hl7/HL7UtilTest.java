@@ -10,7 +10,9 @@
 package org.openmrs.hl7;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -33,7 +35,7 @@ public class HL7UtilTest {
 	@SuppressWarnings("deprecation")
 	public void parseHL7Timestamp_shouldNotFlubDstWith20091225123000() throws HL7Exception {
 		// set tz to be US/Indianapolis so this junit test works everywhere and always
-		TimeZone originalTimeZone = TimeZone.getDefault();
+		TimeZone originalTimeZone = TimeZone.getTimeZone(ZoneId.systemDefault());
 		TimeZone.setDefault(TimeZone.getTimeZone("EST"));
 
 		Date d = HL7Util.parseHL7Date("20091225003000");
@@ -60,10 +62,12 @@ public class HL7UtilTest {
 	@Test
 	public void getTimeZoneOffset_shouldReturnTimezoneForGivenDateAndNotTheCurrentDate() throws ParseException {
 		// set tz to be US/Indianapolis so this junit test works everywhere and always
-		TimeZone originalTimeZone = TimeZone.getDefault();
+		TimeZone originalTimeZone = TimeZone.getTimeZone(ZoneId.systemDefault());
 		TimeZone.setDefault(TimeZone.getTimeZone("GMT-05:00"));
 
-		assertEquals("-0500", HL7Util.getTimeZoneOffset("197804110615", new SimpleDateFormat("yyyyMMdd").parse("20091225")));
+		assertEquals("-0500", HL7Util.getTimeZoneOffset("197804110615",
+		    Date.from(LocalDate.parse("20091225", DateTimeFormatter.ofPattern("yyyyMMdd")).atStartOfDay(ZoneId.systemDefault())
+		            .toInstant())));
 
 		// reset the timezone
 		TimeZone.setDefault(originalTimeZone);
@@ -85,7 +89,7 @@ public class HL7UtilTest {
 	@SuppressWarnings("deprecation")
 	public void parseHL7Time_shouldHandle0615() throws HL7Exception {
 		// set tz to be a __non DST__ timezone so this junit test works everywhere and always
-		TimeZone originalTimeZone = TimeZone.getDefault();
+		TimeZone originalTimeZone = TimeZone.getTimeZone(ZoneId.systemDefault());
 		TimeZone.setDefault(TimeZone.getTimeZone("EAT"));
 
 		Date parsedDate = HL7Util.parseHL7Time("0615");

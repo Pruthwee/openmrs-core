@@ -9,8 +9,10 @@
  */
 package org.openmrs.validator;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.openmrs.Encounter;
@@ -169,7 +171,7 @@ public class VisitValidator extends BaseCustomizableValidator implements Validat
 		Date birthday = patient.getBirthdate();
 
 		if (patient.getBirthdateEstimated()) {
-			Calendar cal = Calendar.getInstance();
+			Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 			cal.setTime(birthday);
 			cal.add(Calendar.YEAR, calculateGracePeriodInYears(patient.getAge()));
 			birthday = cal.getTime();

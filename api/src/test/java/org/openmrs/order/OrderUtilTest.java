@@ -10,9 +10,10 @@
 package org.openmrs.order;
 
 import java.lang.reflect.Field;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import org.apache.commons.lang3.time.DateUtils;
@@ -27,6 +28,17 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Contains test for OrderUtil
  */
 public class OrderUtilTest {
+
+	/**
+	 * Parses dd/MM/yyyy strings to a Date at the start of the day in the default time zone
+	 */
+	private static class DmyParser {
+
+		Date parse(String source) {
+			return Date.from(LocalDate.parse(source, DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+			        .atStartOfDay(ZoneId.systemDefault()).toInstant());
+		}
+	}
 
 	public static boolean isActiveOrder(Order order, Date asOfDate) {
 		return order.isActive(asOfDate) && order.getAction() != Order.Action.DISCONTINUE;
@@ -235,7 +247,7 @@ public class OrderUtilTest {
 	 */
 	@Test
 	public void checkScheduleOverlap_shouldReturnTrueIfOrder2StartsBeforeOrder1AndEndsAfterOrder1() throws ParseException {
-		DateFormat df = new SimpleDateFormat("dd/MM/yyy");
+		DmyParser df = new DmyParser();
 		Order order1 = new Order();
 		order1.setDateActivated(df.parse("03/08/2014"));
 		order1.setAutoExpireDate(df.parse("05/08/2014"));
@@ -252,7 +264,7 @@ public class OrderUtilTest {
 	 */
 	@Test
 	public void checkScheduleOverlap_shouldReturnTrueIfOrder1StartsOnTheStopDateOfOrder2() throws ParseException {
-		DateFormat df = new SimpleDateFormat("dd/MM/yyy");
+		DmyParser df = new DmyParser();
 		Order order1 = new Order();
 		order1.setDateActivated(df.parse("13/08/2014"));
 		Order order2 = new Order();
@@ -273,7 +285,7 @@ public class OrderUtilTest {
 	 */
 	@Test
 	public void checkScheduleOverlap_shouldReturnTrueIfOrder1EndsOnTheStartDateOfOrder2() throws ParseException {
-		DateFormat df = new SimpleDateFormat("dd/MM/yyy");
+		DmyParser df = new DmyParser();
 		Order order1 = new Order();
 		order1.setDateActivated(df.parse("05/08/2014"));
 		order1.setAutoExpireDate(df.parse("13/08/2014"));
@@ -294,7 +306,7 @@ public class OrderUtilTest {
 	 */
 	@Test
 	public void checkScheduleOverlap_shouldReturnTrueIfBothOrdersStartAndEndOnSameDates() throws ParseException {
-		DateFormat df = new SimpleDateFormat("dd/MM/yyy");
+		DmyParser df = new DmyParser();
 		Order order1 = new Order();
 		order1.setDateActivated(df.parse("05/08/2014"));
 		order1.setAutoExpireDate(df.parse("13/08/2014"));

@@ -104,35 +104,36 @@ public class MigrateDataSet {
 			// the straight-up database connection
 			String url = "jdbc:mysql://localhost/" + tempDatabaseName;
 			Class.forName("com.mysql.cj.jdbc.Driver");
-			Connection con = DriverManager.getConnection(url, credentials[0], credentials[1]);
+			try (Connection con = DriverManager.getConnection(url, credentials[0], credentials[1])) {
 
-			// database connection for dbunit
-			IDatabaseConnection dbunitConnection = new DatabaseConnection(con);
+				// database connection for dbunit
+				IDatabaseConnection dbunitConnection = new DatabaseConnection(con);
 
-			try (InputStream fileOrDirectoryStream = new FileInputStream(fileOrDirectory)) {
-				PreparedStatement ps = con.prepareStatement("SET FOREIGN_KEY_CHECKS=0;");
-				ps.execute();
-				ps.close();
+				try (InputStream fileOrDirectoryStream = new FileInputStream(fileOrDirectory)) {
+					PreparedStatement ps = con.prepareStatement("SET FOREIGN_KEY_CHECKS=0;");
+					ps.execute();
+					ps.close();
 
-				IDataSet dataset = new FlatXmlDataSet(fileOrDirectoryStream);
+					IDataSet dataset = new FlatXmlDataSet(fileOrDirectoryStream);
 
-				DatabaseOperation.REFRESH.execute(dbunitConnection, dataset);
+					DatabaseOperation.REFRESH.execute(dbunitConnection, dataset);
 
-				//turn off foreign key checks here too.
-				System.out.println(execMysqlCmd("SET FOREIGN_KEY_CHECKS=0", NEW_UPDATE_FILE, true));
+					//turn off foreign key checks here too.
+					System.out.println(execMysqlCmd("SET FOREIGN_KEY_CHECKS=0", NEW_UPDATE_FILE, true));
 
-				System.out.println("Dumping new xml file");
+					System.out.println("Dumping new xml file");
 
-				// get a new connection so dbunit knows the right column headers
-				dbunitConnection = new DatabaseConnection(con);
+					// get a new connection so dbunit knows the right column headers
+					dbunitConnection = new DatabaseConnection(con);
 
-				// full database export that will ignore empty tables
-				FlatXmlWriter datasetWriter = new FlatXmlWriter(new FileOutputStream(fileOrDirectory));
-				datasetWriter.write(dbunitConnection.createDataSet());
-			} catch (Exception e) {
-				System.err.println("Unable to convert: " + filename + " Error: " + e.getMessage());
-			} finally {
-				dbunitConnection = null;
+					// full database export that will ignore empty tables
+					FlatXmlWriter datasetWriter = new FlatXmlWriter(new FileOutputStream(fileOrDirectory));
+					datasetWriter.write(dbunitConnection.createDataSet());
+				} catch (Exception e) {
+					System.err.println("Unable to convert: " + filename + " Error: " + e.getMessage());
+				} finally {
+					dbunitConnection = null;
+				}
 			}
 
 			System.out.println("Finished!");

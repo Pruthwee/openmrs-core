@@ -15,14 +15,18 @@ import java.io.CharArrayReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -87,6 +91,10 @@ public class ObsServiceTest extends BaseContextSensitiveTest {
 	protected static final String COMPLEX_OBS_XML = "org/openmrs/api/include/ObsServiceTest-complex.xml";
 
 	protected static final String REVISION_OBS_XML = "org/openmrs/api/include/ObsServiceTest-RevisionObs.xml";
+
+	private static Date parseDate(DateTimeFormatter formatter, String s) {
+		return Date.from(LocalDate.parse(s, formatter).atStartOfDay(ZoneId.systemDefault()).toInstant());
+	}
 
 	@Autowired
 	private ObsService obsService;
@@ -376,41 +384,42 @@ public class ObsServiceTest extends BaseContextSensitiveTest {
 		executeDataSet(INITIAL_OBS_XML);
 
 		ObsService os = Context.getObsService();
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 		// Test 1, No bounderies
-		Date sd = df.parse("2006-02-01");
-		Date ed = df.parse("2006-02-20");
+		Date sd = parseDate(df, "2006-02-01");
+		Date ed = parseDate(df, "2006-02-20");
 		List<Obs> obs = os.getObservations(null, null, null, null, null, null, null, null, null, sd, ed, false);
 		assertEquals(9, obs.size());
 
 		// Test 2, From boundary
-		sd = df.parse("2006-02-13");
-		ed = df.parse("2006-02-20");
+		sd = parseDate(df, "2006-02-13");
+		ed = parseDate(df, "2006-02-20");
 		obs = os.getObservations(null, null, null, null, null, null, null, null, null, sd, ed, false);
 		assertEquals(4, obs.size());
 
 		// Test 3, To boundary
-		sd = df.parse("2006-02-01");
-		ed = df.parse("2006-02-15");
+		sd = parseDate(df, "2006-02-01");
+		ed = parseDate(df, "2006-02-15");
 		obs = os.getObservations(null, null, null, null, null, null, null, null, null, sd, ed, false);
 		assertEquals(8, obs.size());
 
 		// Test 4, Both Boundaries
-		sd = df.parse("2006-02-11");
-		ed = new SimpleDateFormat("yyyy-MM-dd-hh-mm").parse("2006-02-11-11-59");
+		sd = parseDate(df, "2006-02-11");
+		ed = Date.from(LocalDateTime.parse("2006-02-11-11-59", DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm"))
+		        .atZone(ZoneId.systemDefault()).toInstant());
 		obs = os.getObservations(null, null, null, null, null, null, null, null, null, sd, ed, false);
 		assertEquals(1, obs.size());
 
 		// Test 5, Outside before
-		sd = df.parse("2006-02-01");
-		ed = df.parse("2006-02-08");
+		sd = parseDate(df, "2006-02-01");
+		ed = parseDate(df, "2006-02-08");
 		obs = os.getObservations(null, null, null, null, null, null, null, null, null, sd, ed, false);
 		assertEquals(0, obs.size());
 
 		// Test 6, Outside After
-		sd = df.parse("2006-02-17");
-		ed = df.parse("2006-02-20");
+		sd = parseDate(df, "2006-02-17");
+		ed = parseDate(df, "2006-02-20");
 		obs = os.getObservations(null, null, null, null, null, null, null, null, null, sd, ed, false);
 		assertEquals(0, obs.size());
 	}
@@ -426,10 +435,10 @@ public class ObsServiceTest extends BaseContextSensitiveTest {
 		executeDataSet(INITIAL_OBS_XML);
 
 		ObsService os = Context.getObsService();
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-		Date sd = df.parse("2006-02-13");
-		Date ed = df.parse("2006-02-13");
+		Date sd = parseDate(df, "2006-02-13");
+		Date ed = parseDate(df, "2006-02-13");
 		List<Obs> obs = os.getObservations(null, null, null, null, null, null, null, null, null, sd,
 		    OpenmrsUtil.getLastMomentOfDay(ed), false);
 		assertEquals(1, obs.size());
@@ -2705,7 +2714,7 @@ public class ObsServiceTest extends BaseContextSensitiveTest {
 	private Obs buildObservation() {
 		Concept concept = Context.getConceptService().getConcept(4089);
 		Patient patient = Context.getPatientService().getPatient(2);
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -5);
 		patient.setBirthdate(calendar.getTime());
 

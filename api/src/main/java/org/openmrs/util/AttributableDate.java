@@ -11,6 +11,9 @@ package org.openmrs.util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
@@ -68,7 +71,7 @@ public class AttributableDate extends Date implements Attributable<AttributableD
 	 */
 	@Override
 	public String getDisplayString() {
-		return new SimpleDateFormat(DATE_FORMAT).format(this);
+		return DateTimeFormatter.ofPattern(DATE_FORMAT).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(getTime()));
 	}
 
 	/**
@@ -110,7 +113,7 @@ public class AttributableDate extends Date implements Attributable<AttributableD
 	 */
 	@Override
 	public String serialize() {
-		return new SimpleDateFormat(DATE_FORMAT).format(this);
+		return DateTimeFormatter.ofPattern(DATE_FORMAT).withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(getTime()));
 	}
 
 }

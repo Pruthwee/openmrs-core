@@ -9,8 +9,10 @@
  */
 package org.openmrs.hl7.db.hibernate;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import jakarta.persistence.Query;
@@ -389,7 +391,7 @@ public class HibernateHL7DAO implements HL7DAO {
 		    null);
 
 		if (daysToKeep != null) {
-			Calendar cal = Calendar.getInstance();
+			Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 			cal.add(Calendar.DATE, -1 * daysToKeep);
 			predicates.add(cb.lessThan(root.get("dateCreated"), cal.getTime()));
 		}

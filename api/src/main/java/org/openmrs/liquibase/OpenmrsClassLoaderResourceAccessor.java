@@ -11,6 +11,7 @@ package org.openmrs.liquibase;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLConnection;
 import java.util.List;
 
 import org.openmrs.util.OpenmrsClassLoader;
@@ -32,6 +33,10 @@ import liquibase.resource.Resource;
  */
 @Deprecated
 public class OpenmrsClassLoaderResourceAccessor extends ClassLoaderResourceAccessor {
+
+	private static final int CONNECT_TIMEOUT_MS = 5000;
+
+	private static final int READ_TIMEOUT_MS = 30000;
 
 	public OpenmrsClassLoaderResourceAccessor() {
 		super(OpenmrsClassLoader.getInstance());
@@ -55,7 +60,10 @@ public class OpenmrsClassLoaderResourceAccessor extends ClassLoaderResourceAcces
 		if (!result.isEmpty() && result.size() > 1) {
 			try (InputStreamList oldResult = result) {
 				URI uri = oldResult.getURIs().get(0);
-				result = new InputStreamList(uri, uri.toURL().openStream());
+				URLConnection connection = uri.toURL().openConnection();
+				connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+				connection.setReadTimeout(READ_TIMEOUT_MS);
+				result = new InputStreamList(uri, connection.getInputStream());
 			}
 
 		}

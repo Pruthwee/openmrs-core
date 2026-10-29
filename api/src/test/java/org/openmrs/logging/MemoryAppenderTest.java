@@ -11,7 +11,12 @@ package org.openmrs.logging;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.logging.log4j.Level;
@@ -340,12 +345,13 @@ class MemoryAppenderTest {
 		concurrentLogger.setLevel(Level.ALL);
 		concurrentLogger.addAppender(appender1);
 
+		ExecutorService executor = Executors.newFixedThreadPool(1);
 		try {
 			AtomicInteger sent = new AtomicInteger(0);
 			CountDownLatch producerStarted = new CountDownLatch(1);
 			CountDownLatch reconfigSignal = new CountDownLatch(1);
 
-			Thread producer = new Thread(() -> {
+			Future<?> producer = executor.submit(() -> {
 				producerStarted.countDown();
 				for (int i = 0; i < messageCount; i++) {
 					concurrentLogger.warn(Integer.toString(i));
@@ -356,7 +362,6 @@ class MemoryAppenderTest {
 					}
 				}
 			});
-			producer.start();
 
 			assertThat("Producer should start", producerStarted.await(5, TimeUnit.SECONDS), equalTo(true));
 			assertThat("Producer should reach the reconfig signal", reconfigSignal.await(5, TimeUnit.SECONDS),
@@ -369,8 +374,14 @@ class MemoryAppenderTest {
 			        .setLayout(PatternLayout.newBuilder().withPattern("%m").build()).setBufferSize(bufferSize).build();
 			appender2.start();
 
-			producer.join(10_000);
-			assertThat("Producer should have finished", producer.isAlive(), equalTo(false));
+			try {
+				producer.get(10_000, TimeUnit.MILLISECONDS);
+			} catch (TimeoutException e) {
+				// reported by the assertion below
+			} catch (ExecutionException e) {
+				throw new AssertionError("Producer failed", e);
+			}
+			assertThat("Producer should have finished", producer.isDone(), equalTo(true));
 			assertThat(sent.get(), equalTo(messageCount));
 
 			try {
@@ -387,6 +398,7 @@ class MemoryAppenderTest {
 				appender2.stop();
 			}
 		} finally {
+			executor.shutdownNow();
 			concurrentLogger.removeAppender(appender1);
 			concurrentLogger.setLevel(null);
 			((Logger) LogManager.getRootLogger()).getContext().updateLoggers();

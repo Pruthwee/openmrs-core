@@ -14,7 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -693,7 +694,7 @@ public class FormServiceTest extends BaseContextSensitiveTest {
 		resource.setForm(form);
 		resource.setName("Start Date");
 		resource.setDatatypeClassname("org.openmrs.customdatatype.datatype.DateDatatype");
-		Date expected = new SimpleDateFormat("yyyy-MM-dd").parse("2011-10-16");
+		Date expected = Date.from(LocalDate.parse("2011-10-16").atStartOfDay(ZoneId.systemDefault()).toInstant());
 		resource.setValue(expected);
 
 		Context.getFormService().saveFormResource(resource);
@@ -720,7 +721,7 @@ public class FormServiceTest extends BaseContextSensitiveTest {
 		resource.setForm(form);
 		resource.setName(name);
 		resource.setDatatypeClassname("org.openmrs.customdatatype.datatype.DateDatatype");
-		Date expected = new SimpleDateFormat("yyyy-MM-dd").parse("2011-10-16");
+		Date expected = Date.from(LocalDate.parse("2011-10-16").atStartOfDay(ZoneId.systemDefault()).toInstant());
 		resource.setValue(expected);
 
 		resource = Context.getFormService().saveFormResource(resource);
@@ -751,7 +752,7 @@ public class FormServiceTest extends BaseContextSensitiveTest {
 		resource.setForm(form);
 		resource.setName(name);
 		resource.setDatatypeClassname("org.openmrs.customdatatype.datatype.DateDatatype");
-		Date previous = new SimpleDateFormat("yyyy-MM-dd").parse("2011-10-16");
+		Date previous = Date.from(LocalDate.parse("2011-10-16").atStartOfDay(ZoneId.systemDefault()).toInstant());
 		resource.setValue(previous);
 
 		resource = Context.getFormService().saveFormResource(resource);
@@ -787,7 +788,7 @@ public class FormServiceTest extends BaseContextSensitiveTest {
 		resource.setForm(form);
 		resource.setName(name);
 		resource.setDatatypeClassname("org.openmrs.customdatatype.datatype.DateDatatype");
-		Date previous = new SimpleDateFormat("yyyy-MM-dd").parse("2011-10-16");
+		Date previous = Date.from(LocalDate.parse("2011-10-16").atStartOfDay(ZoneId.systemDefault()).toInstant());
 		resource.setValue(previous);
 
 		Context.getFormService().saveFormResource(resource);
@@ -801,7 +802,7 @@ public class FormServiceTest extends BaseContextSensitiveTest {
 		resource.setForm(form);
 		resource.setName(name);
 		resource.setDatatypeClassname("org.openmrs.customdatatype.datatype.DateDatatype");
-		Date expected = new SimpleDateFormat("yyyy-MM-dd").parse("2010-10-16");
+		Date expected = Date.from(LocalDate.parse("2010-10-16").atStartOfDay(ZoneId.systemDefault()).toInstant());
 		resource.setValue(expected);
 		Context.getFormService().saveFormResource(resource);
 
@@ -831,7 +832,7 @@ public class FormServiceTest extends BaseContextSensitiveTest {
 		resource.setForm(form);
 		resource.setName(name);
 		resource.setDatatypeClassname("org.openmrs.customdatatype.datatype.DateDatatype");
-		Date expected = new SimpleDateFormat("yyyy-MM-dd").parse("2011-10-16");
+		Date expected = Date.from(LocalDate.parse("2011-10-16").atStartOfDay(ZoneId.systemDefault()).toInstant());
 		resource.setValue(expected);
 
 		Context.getFormService().saveFormResource(resource);

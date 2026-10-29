@@ -10,9 +10,15 @@
 package org.openmrs.hl7;
 
 import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
@@ -38,11 +44,16 @@ public class HL7Util {
 	private static final Logger log = LoggerFactory.getLogger(HL7Util.class);
 
 	// Date and time format parsers
-	private static final String TIMESTAMP_FORMAT = "yyyyMMddHHmmss.SSSZ";
+	private static final String TIMESTAMP_FORMAT = "yyyyMMddHHmmss.SSSxx";
 
-	private static final String TIME_FORMAT = "HHmmss.SSSZ";
+	private static final String TIME_FORMAT = "HHmmss.SSSxx";
 
-	public static final String LOCAL_TIMEZONE_OFFSET = new SimpleDateFormat("Z").format(new Date());
+	private static final String DAY_FORMAT = "yyyyMMdd";
+
+	private static final String OFFSET_FORMAT = "xx";
+
+	public static final String LOCAL_TIMEZONE_OFFSET = DateTimeFormatter.ofPattern(OFFSET_FORMAT)
+	        .format(ZonedDateTime.now());
 
 	/**
 	 * Converts an HL7 timestamp into a java.util.Date object. HL7 timestamps can be created with
@@ -89,9 +100,11 @@ public class HL7Util {
 		// Parse timezone (optional in HL7 format)
 		String timeZoneOffset;
 		try {
-			Date parsedDay = new SimpleDateFormat("yyyyMMdd").parse(s.substring(0, 8));
+			Date parsedDay = Date.from(LocalDate
+			        .parse(s.substring(0, 8), DateTimeFormatter.ofPattern(DAY_FORMAT).withResolverStyle(ResolverStyle.LENIENT))
+			        .atStartOfDay(ZoneId.systemDefault()).toInstant());
 			timeZoneOffset = getTimeZoneOffset(s, parsedDay);
-		} catch (ParseException e) {
+		} catch (DateTimeParseException e) {
 			throw new HL7Exception("Error parsing date: '" + s.substring(0, 8) + "' for time zone offset'" + s + "'", e);
 		}
 		s = s.replace(timeZoneOffset, ""); // remove the timezone from the string
@@ -137,8 +150,9 @@ public class HL7Util {
 
 		Date date;
 		try {
-			date = new SimpleDateFormat(TIMESTAMP_FORMAT).parse(dateString.toString());
-		} catch (ParseException e) {
+			date = Date.from(OffsetDateTime.parse(dateString.toString(),
+			    DateTimeFormatter.ofPattern(TIMESTAMP_FORMAT).withResolverStyle(ResolverStyle.LENIENT)).toInstant());
+		} catch (DateTimeParseException e) {
 			throw new HL7Exception("Error parsing date '" + s + "'");
 		}
 		return date;
@@ -177,9 +191,8 @@ public class HL7Util {
 
 		} else {
 			//set default timezone offset from the current day
-			Calendar cal = Calendar.getInstance();
-			cal.setTime(givenDate);
-			timeZoneOffset = new SimpleDateFormat("Z").format(cal.getTime());
+			timeZoneOffset = DateTimeFormatter.ofPattern(OFFSET_FORMAT)
+			        .format(Instant.ofEpochMilli(givenDate.getTime()).atZone(ZoneId.systemDefault()));
 		}
 
 		return timeZoneOffset;
@@ -257,8 +270,10 @@ public class HL7Util {
 
 		Date date;
 		try {
-			date = new SimpleDateFormat(TIME_FORMAT).parse(timeString.toString());
-		} catch (ParseException e) {
+			date = Date.from(OffsetTime.parse(timeString.toString(),
+			    DateTimeFormatter.ofPattern(TIME_FORMAT).withResolverStyle(ResolverStyle.LENIENT)).atDate(LocalDate.EPOCH)
+			        .toInstant());
+		} catch (DateTimeParseException e) {
 			throw new HL7Exception("Invalid time format: '" + s + "' [" + timeString + "]", e);
 		}
 		return date;

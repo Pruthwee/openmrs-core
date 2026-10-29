@@ -12,17 +12,22 @@ package org.openmrs.api;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -722,7 +727,7 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 		EncounterService es = Context.getEncounterService();
 		// Create a new Encounter
 		Encounter enc = buildEncounter();
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.set(Calendar.YEAR, calendar.get(Calendar.YEAR) - 1);
 		enc.setEncounterDatetime(calendar.getTime());
 
@@ -816,7 +821,7 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 		// the encounter to save without a dateCreated
 		Encounter encounter = buildEncounter();
 		encounter.setCreator(new User(4));
-		Date date = new Date(System.currentTimeMillis() - 5000); // make sure we
+		Date date = Date.from(Instant.now().minusMillis(5000)); // make sure we
 		// have a
 		// date that
 		// isn't
@@ -856,7 +861,7 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 
 		// the encounter to save without a dateCreated
 		Encounter encounter = buildEncounter();
-		Date date = new Date(System.currentTimeMillis() - 5000); // make sure we
+		Date date = Date.from(Instant.now().minusMillis(5000)); // make sure we
 		// have a date that isn't "right now"
 		encounter.setDateCreated(date);
 		User creator = new User(1);
@@ -1239,23 +1244,23 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 	@Test
 	public void getEncounters_shouldGetEncountersOnOrAfterDate() throws ParseException {
 		// there is only one nonvoided encounter, on 2005-01-01
-		DateFormat ymd = new SimpleDateFormat("yyyy-MM-dd");
+		Function<String, Date> ymd = s -> Date.from(LocalDate.parse(s).atStartOfDay(ZoneId.systemDefault()).toInstant());
 
 		// test for a min date long before all dates
 		EncounterSearchCriteria encounterSearchCriteria = new EncounterSearchCriteriaBuilder()
-		        .setFromDate(ymd.parse("2004-12-31")).setIncludeVoided(false).createEncounterSearchCriteria();
+		        .setFromDate(ymd.apply("2004-12-31")).setIncludeVoided(false).createEncounterSearchCriteria();
 		List<Encounter> encounters = Context.getEncounterService().getEncounters(encounterSearchCriteria);
 		assertEquals(5, encounters.size());
 		assertEquals(1, encounters.get(0).getEncounterId().intValue());
 
 		// test for exact date search
-		encounterSearchCriteria = new EncounterSearchCriteriaBuilder().setFromDate(ymd.parse("2005-01-01"))
+		encounterSearchCriteria = new EncounterSearchCriteriaBuilder().setFromDate(ymd.apply("2005-01-01"))
 		        .setIncludeVoided(false).createEncounterSearchCriteria();
 		encounters = Context.getEncounterService().getEncounters(encounterSearchCriteria);
 		assertEquals(5, encounters.size());
 
 		// test for one day later
-		encounterSearchCriteria = new EncounterSearchCriteriaBuilder().setFromDate(ymd.parse("2005-01-02"))
+		encounterSearchCriteria = new EncounterSearchCriteriaBuilder().setFromDate(ymd.apply("2005-01-02"))
 		        .setIncludeVoided(false).createEncounterSearchCriteria();
 		encounters = Context.getEncounterService().getEncounters(encounterSearchCriteria);
 		assertEquals(4, encounters.size());
@@ -1272,7 +1277,7 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getEncounters_shouldGetEncountersOnOrUpToADate() throws ParseException {
-		Date toDate = new SimpleDateFormat("yyyy-dd-MM").parse("2006-01-01");
+		Date toDate = Date.from(LocalDate.of(2006, 1, 1).atStartOfDay(ZoneId.systemDefault()).toInstant());
 		EncounterSearchCriteria encounterSearchCriteria = new EncounterSearchCriteriaBuilder().setToDate(toDate)
 		        .setIncludeVoided(true).createEncounterSearchCriteria();
 		List<Encounter> encounters = Context.getEncounterService().getEncounters(encounterSearchCriteria);
@@ -1400,7 +1405,7 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 		// the encounter to save without a dateCreated
 		EncounterType encounterType = new EncounterType("testing", "desc");
 		encounterType.setCreator(new User(4));
-		Date date = new Date(System.currentTimeMillis() - 5000); // make sure we have a date that isn't "right now"
+		Date date = Date.from(Instant.now().minusMillis(5000)); // make sure we have a date that isn't "right now"
 		encounterType.setDateCreated(date);
 
 		// make sure the logged in user isn't the user we're testing with
@@ -1434,7 +1439,7 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 		EncounterType encounterType = new EncounterType();
 		encounterType.setName("testing");
 		encounterType.setDescription("desc");
-		Date date = new Date(System.currentTimeMillis() - 5000); // make sure we
+		Date date = Date.from(Instant.now().minusMillis(5000)); // make sure we
 		// have a
 		// date that
 		// isn't
@@ -2331,7 +2336,7 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 		gp.setPropertyValue("org.openmrs.api.handler.ExistingOrNewVisitAssignmentHandler");
 		Context.getAdministrationService().saveGlobalProperty(gp);
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.setTime(encounter.getEncounterDatetime());
 		calendar.set(Calendar.YEAR, 1900);
 		encounter.setEncounterDatetime(calendar.getTime());
@@ -3143,8 +3148,10 @@ public class EncounterServiceTest extends BaseContextSensitiveTest {
 	}
 
 	private EncounterSearchCriteria encounterSearchForVoidedWithDateChanged(String dateChanged) throws ParseException {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-		return new EncounterSearchCriteriaBuilder().setIncludeVoided(true).setDateChanged(sdf.parse(dateChanged))
+		DateTimeFormatter sdf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		return new EncounterSearchCriteriaBuilder().setIncludeVoided(true)
+		        .setDateChanged(
+		            Date.from(LocalDate.parse(dateChanged, sdf).atStartOfDay(ZoneId.systemDefault()).toInstant()))
 		        .createEncounterSearchCriteria();
 	}
 

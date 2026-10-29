@@ -10,12 +10,14 @@
 package org.openmrs.validator;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
@@ -65,17 +67,20 @@ public class VisitValidatorTest extends BaseContextSensitiveTest {
 
 		//The only reason for adding the four lines below is because without them,
 		//some tests fail on my macbook.
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
-		DATE_TIME_2014_01_04_00_00_00_0 = formatter.parse("2014/01/04").getTime();
-		DATE_TIME_2014_02_05_00_00_00_0 = formatter.parse("2014/02/05").getTime();
-		DATE_TIME_2014_02_11_00_00_00_0 = formatter.parse("2014/02/11").getTime();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+		DATE_TIME_2014_01_04_00_00_00_0 = LocalDate.parse("2014/01/04", formatter).atStartOfDay(ZoneId.systemDefault())
+		        .toInstant().toEpochMilli();
+		DATE_TIME_2014_02_05_00_00_00_0 = LocalDate.parse("2014/02/05", formatter).atStartOfDay(ZoneId.systemDefault())
+		        .toInstant().toEpochMilli();
+		DATE_TIME_2014_02_11_00_00_00_0 = LocalDate.parse("2014/02/11", formatter).atStartOfDay(ZoneId.systemDefault())
+		        .toInstant().toEpochMilli();
 
 		// Do not allow overlapping visits to test full validation of visit start and stop dates.
 		//
 		globalPropertiesTestHelper = new GlobalPropertiesTestHelper(Context.getAdministrationService());
 		globalPropertiesTestHelper.setGlobalProperty(OpenmrsConstants.GLOBAL_PROPERTY_ALLOW_OVERLAPPING_VISITS, "false");
 
-		calendar = Calendar.getInstance();
+		calendar = GregorianCalendar.from(ZonedDateTime.now());
 	}
 
 	@AfterEach
@@ -184,7 +189,7 @@ public class VisitValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailIfTheEndDatetimeIsBeforeTheStartDatetime() {
 		Visit visit = new Visit();
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		visit.setStartDatetime(c.getTime());
 		c.set(2010, 3, 15);//set to an older date
 		visit.setStopDatetime(c.getTime());
@@ -496,7 +501,7 @@ public class VisitValidatorTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void validate_shouldAcceptAVisitIfStartDateTimeIsEqualToStartDateTimeOfAnotherVoidedVisitOfTheSamePatient() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.setTimeInMillis(DATE_TIME_2014_02_05_00_00_00_0);
 
 		Visit visit = makeVisit(42);
@@ -516,7 +521,7 @@ public class VisitValidatorTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void validate_shouldAcceptAVisitIfStartDateTimeFallsIntoAnotherVoidedVisitOfTheSamePatient() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.set(2014, Calendar.FEBRUARY, 6);
 
 		Visit visit = makeVisit(42);
@@ -536,7 +541,7 @@ public class VisitValidatorTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void validate_shouldAcceptAVisitIfStopDateTimeFallsIntoAnotherVoidedVisitOfTheSamePatient() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.set(2014, Calendar.FEBRUARY, 2);
 
 		Visit visit = makeVisit(42);
@@ -560,7 +565,7 @@ public class VisitValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldAcceptAVisitIfItContainsAnotherVoidedVisitOfTheSamePatient() {
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.set(2014, Calendar.FEBRUARY, 2);
 
 		Visit visit = makeVisit(42);

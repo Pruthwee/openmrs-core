@@ -39,11 +39,9 @@ public class UpdateLayoutAddressFormatChangeSet implements CustomTaskChange {
 	@Override
 	public void execute(Database database) throws CustomChangeException {
 		JdbcConnection connection = (JdbcConnection) database.getConnection();
-		Statement stmt = null;
 		PreparedStatement pStmt = null;
 
-		try {
-			stmt = connection.createStatement();
+		try (Statement stmt = connection.createStatement()) {
 			ResultSet rs = stmt
 			        .executeQuery("SELECT property_value FROM global_property WHERE property = 'layout.address.format'");
 			if (rs.next()) {
@@ -59,14 +57,6 @@ public class UpdateLayoutAddressFormatChangeSet implements CustomTaskChange {
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
 		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
-
 			if (pStmt != null) {
 				try {
 					pStmt.close();

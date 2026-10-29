@@ -10,7 +10,10 @@
 package org.openmrs.customdatatype.datatype;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +36,7 @@ public class DateDatatypeTest {
 	 */
 	@Test
 	public void deserialize_shouldReconstructADateSerializedByThisHandler() throws ParseException {
-		Date date = new SimpleDateFormat("yyyy-MM-dd").parse("2011-04-25");
+		Date date = Date.from(LocalDate.parse("2011-04-25").atStartOfDay(ZoneId.systemDefault()).toInstant());
 		assertEquals(date, datatype.deserialize(datatype.serialize(date)));
 	}
 
@@ -43,7 +46,8 @@ public class DateDatatypeTest {
 	 */
 	@Test
 	public void serialize_shouldConvertADateIntoAYmdStringRepresentation() throws ParseException {
-		Date date = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss").parse("2011-04-25 01:02:03");
+		Date date = Date.from(LocalDateTime.parse("2011-04-25 01:02:03", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+		        .atZone(ZoneId.systemDefault()).toInstant());
 		assertEquals("2011-04-25", datatype.serialize(date));
 	}
 }

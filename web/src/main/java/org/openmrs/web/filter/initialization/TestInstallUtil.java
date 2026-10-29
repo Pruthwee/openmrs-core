@@ -48,6 +48,10 @@ import org.slf4j.LoggerFactory;
  */
 public class TestInstallUtil {
 
+	private static final int CONNECT_TIMEOUT_MS = 15000;
+
+	private static final int READ_TIMEOUT_MS = 30000;
+
 	private TestInstallUtil() {
 	}
 
@@ -225,7 +229,8 @@ public class TestInstallUtil {
 		try {
 			HttpURLConnection urlConnect = (HttpURLConnection) new URL(urlString).openConnection();
 			//wait for 15sec
-			urlConnect.setConnectTimeout(15000);
+			urlConnect.setConnectTimeout(CONNECT_TIMEOUT_MS);
+			urlConnect.setReadTimeout(READ_TIMEOUT_MS);
 			urlConnect.setUseCaches(false);
 			//trying to retrieve data from the source. If there
 			//is no connection, this line will fail
@@ -269,7 +274,8 @@ public class TestInstallUtil {
 	private static HttpURLConnection createConnection(String url) throws IOException, MalformedURLException {
 		final HttpURLConnection result = (HttpURLConnection) new URL(url).openConnection();
 		result.setRequestMethod("POST");
-		result.setConnectTimeout(15000);
+		result.setConnectTimeout(CONNECT_TIMEOUT_MS);
+		result.setReadTimeout(READ_TIMEOUT_MS);
 		result.setUseCaches(false);
 		result.setDoOutput(true);
 		return result;

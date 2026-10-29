@@ -10,6 +10,7 @@
 package org.openmrs.messagesource.impl;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -52,7 +53,7 @@ public class MutableResourceBundleMessageSource extends ReloadableResourceBundle
 
 	private int cacheMilliseconds = -1;
 
-	private long lastCached = System.currentTimeMillis();
+	private long lastCached = Instant.now().toEpochMilli();
 
 	/** Cached list of available locales. */
 	private Collection<Locale> locales;
@@ -62,7 +63,7 @@ public class MutableResourceBundleMessageSource extends ReloadableResourceBundle
 	 */
 	@Override
 	public Collection<Locale> getLocales() {
-		long now = System.currentTimeMillis();
+		long now = Instant.now().toEpochMilli();
 		if (locales == null || cacheMilliseconds <= 0 || now - cacheMilliseconds > lastCached) {
 			locales = findLocales();
 			lastCached = now;

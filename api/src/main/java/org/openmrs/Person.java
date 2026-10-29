@@ -9,13 +9,18 @@
  */
 package org.openmrs;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -275,12 +280,16 @@ public class Person extends BaseChangeableOpenmrsData {
 	 */
 	public Date getBirthDateTime() {
 		if (birthdate != null && birthtime != null) {
-			String birthDateString = new SimpleDateFormat("yyyy-MM-dd").format(birthdate);
-			String birthTimeString = new SimpleDateFormat("HH:mm:ss").format(birthtime);
+			String birthDateString = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault())
+			        .format(Instant.ofEpochMilli(birthdate.getTime()));
+			String birthTimeString = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault())
+			        .format(Instant.ofEpochMilli(birthtime.getTime()));
 
 			try {
-				return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(birthDateString + " " + birthTimeString);
-			} catch (ParseException e) {
+				return Date.from(LocalDateTime
+				        .parse(birthDateString + " " + birthTimeString, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+				        .atZone(ZoneId.systemDefault()).toInstant());
+			} catch (DateTimeParseException e) {
 				log.error("Failed to parse birth date string", e);
 			}
 		}
@@ -947,7 +956,7 @@ public class Person extends BaseChangeableOpenmrsData {
 		}
 
 		// Use default end date as today.
-		Calendar today = Calendar.getInstance();
+		Calendar today = GregorianCalendar.from(ZonedDateTime.now());
 		// But if given, use the given date.
 		if (onDate != null) {
 			today.setTime(onDate);
@@ -958,7 +967,7 @@ public class Person extends BaseChangeableOpenmrsData {
 			today.setTime(getDeathDate());
 		}
 
-		Calendar bday = Calendar.getInstance();
+		Calendar bday = GregorianCalendar.from(ZonedDateTime.now());
 		bday.setTime(birthdate);
 
 		int age = today.get(Calendar.YEAR) - bday.get(Calendar.YEAR);
@@ -1092,7 +1101,7 @@ public class Person extends BaseChangeableOpenmrsData {
 	 * @param ageOnDate (null defaults to today)
 	 */
 	public void setBirthdateFromAge(int age, Date ageOnDate) {
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		c.setTime(ageOnDate == null ? new Date() : ageOnDate);
 		c.set(Calendar.DATE, 1);
 		c.set(Calendar.MONTH, Calendar.JANUARY);

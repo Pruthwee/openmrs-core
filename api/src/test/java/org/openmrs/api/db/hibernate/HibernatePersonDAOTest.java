@@ -10,7 +10,12 @@
 package org.openmrs.api.db.hibernate;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.List;
 
 import org.hibernate.SessionFactory;
@@ -640,8 +645,9 @@ public class HibernatePersonDAOTest extends BaseContextSensitiveTest {
 	@Test
 	public void savePerson_shouldSavePersonWithBirthDateTime() throws ParseException {
 		Person person = new Person();
-		person.setBirthtime(new SimpleDateFormat("HH:mm:ss").parse("15:23:56"));
-		person.setBirthdate(new SimpleDateFormat("yyyy-MM-dd").parse("2012-05-29"));
+		person.setBirthtime(
+		    Date.from(LocalTime.parse("15:23:56").atDate(LocalDate.EPOCH).atZone(ZoneId.systemDefault()).toInstant()));
+		person.setBirthdate(Date.from(LocalDate.parse("2012-05-29").atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		person.setDead(false);
 		person.setVoided(false);
 		person.setBirthdateEstimated(false);
@@ -649,7 +655,9 @@ public class HibernatePersonDAOTest extends BaseContextSensitiveTest {
 
 		assertNotNull(person.getId());
 		Person savedPerson = hibernatePersonDAO.getPerson(person.getId());
-		assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2012-05-29 15:23:56"),
+		assertEquals(
+		    Date.from(LocalDateTime.parse("2012-05-29 15:23:56", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+		            .atZone(ZoneId.systemDefault()).toInstant()),
 		    savedPerson.getBirthDateTime());
 	}
 

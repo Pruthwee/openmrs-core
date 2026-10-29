@@ -160,22 +160,27 @@ if (owaspCSRFGuardScriptHasLoaded !== true) {
                     try {
                         self.status = self.base.status;
                     } catch (e) {
+                        console.debug('csrfguard: could not copy status from the XMLHttpRequest', e);
                     }
                     try {
                         self.statusText = self.base.statusText;
                     } catch (e) {
+                        console.debug('csrfguard: could not copy statusText from the XMLHttpRequest', e);
                     }
                     try {
                         self.readyState = self.base.readyState;
                     } catch (e) {
+                        console.debug('csrfguard: could not copy readyState from the XMLHttpRequest', e);
                     }
                     try {
                         self.responseText = self.base.responseText;
                     } catch (e) {
+                        console.debug('csrfguard: could not copy responseText from the XMLHttpRequest', e);
                     }
                     try {
                         self.responseXML = self.base.responseXML;
                     } catch (e) {
+                        console.debug('csrfguard: could not copy responseXML from the XMLHttpRequest', e);
                     }
 
                     if (self.onreadystatechange !== null) {
@@ -427,6 +432,7 @@ if (owaspCSRFGuardScriptHasLoaded !== true) {
                         //console.debug('Attribute [', attr, '] with value [', newLocation, '] set for element: ', element);
                     } catch (e) {
                         // attempted to set/update unsupported attribute
+                        console.debug('csrfguard: could not set attribute [' + attr + '] on element', e);
                     }
                 } else {
                     let newLocation = location;
@@ -650,7 +656,7 @@ if (owaspCSRFGuardScriptHasLoaded !== true) {
 
                                     injectTokens(tokenName, masterTokenValue, pageTokenWrapper.pageTokens);
                                 } catch (e) {
-                                    console.error("Error while updating tokens from response header.")
+                                    console.error("Error while updating tokens from response header.", e);
                                 }
                             }
                         }

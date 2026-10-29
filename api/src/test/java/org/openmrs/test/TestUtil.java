@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.Connection;
 import java.text.ParseException;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Properties;
@@ -207,8 +208,8 @@ public class TestUtil {
 	 * @see org.openmrs.api.db.hibernate.DropMillisecondsHibernateInterceptor
 	 */
 	public static void waitForClockTick() {
-		long t = System.currentTimeMillis() / 1000;
-		while (System.currentTimeMillis() / 1000 == t) {
+		long t = Instant.now().toEpochMilli() / 1000;
+		while (Instant.now().toEpochMilli() / 1000 == t) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException ex) {}

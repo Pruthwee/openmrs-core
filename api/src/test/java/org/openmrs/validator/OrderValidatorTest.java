@@ -9,9 +9,11 @@
  */
 package org.openmrs.validator;
 
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.junit.jupiter.api.BeforeEach;
@@ -233,7 +235,7 @@ public class OrderValidatorTest extends BaseContextSensitiveTest {
 		order.setConcept(Context.getConceptService().getConcept(88));
 		order.setPatient(Context.getPatientService().getPatient(2));
 		order.setOrderer(Context.getProviderService().getProvider(1));
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(new Date());
 		OrderUtilTest.setDateStopped(order, cal.getTime());
@@ -254,7 +256,7 @@ public class OrderValidatorTest extends BaseContextSensitiveTest {
 		order.setConcept(Context.getConceptService().getConcept(88));
 		order.setPatient(Context.getPatientService().getPatient(2));
 		order.setOrderer(Context.getProviderService().getProvider(1));
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(new Date());
 		order.setAutoExpireDate(cal.getTime());
@@ -358,7 +360,7 @@ public class OrderValidatorTest extends BaseContextSensitiveTest {
 		Patient patient = Context.getPatientService().getPatient(2);
 		encounter.setPatient(patient);
 		order.setPatient(patient);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(cal.getTime());
 		order.setAutoExpireDate(new Date());
@@ -387,7 +389,7 @@ public class OrderValidatorTest extends BaseContextSensitiveTest {
 		order.setConcept(Context.getConceptService().getConcept(5497));
 		order.setOrderer(Context.getProviderService().getProvider(1));
 		order.setCareSetting(orderService.getCareSetting(1));
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.add(Calendar.HOUR_OF_DAY, 1);
 		order.setDateActivated(cal.getTime());
 
@@ -410,7 +412,7 @@ public class OrderValidatorTest extends BaseContextSensitiveTest {
 		Patient patient = Context.getPatientService().getPatient(2);
 		encounter.setPatient(patient);
 		order.setPatient(patient);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(cal.getTime());
 		order.setAutoExpireDate(new Date());
@@ -460,7 +462,7 @@ public class OrderValidatorTest extends BaseContextSensitiveTest {
 		Patient patient = Context.getPatientService().getPatient(2);
 		encounter.setPatient(patient);
 		order.setPatient(patient);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(cal.getTime());
 		order.setAutoExpireDate(new Date());

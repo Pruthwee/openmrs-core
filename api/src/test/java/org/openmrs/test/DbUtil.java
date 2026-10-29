@@ -105,37 +105,18 @@ public class DbUtil {
 
 	private static int createDatabase(String user, String pw, String sql, String url) {
 
-		Connection connection = null;
-		Statement statement = null;
 		try {
 			Class.forName(System.getProperty("databaseDriver")).newInstance();
 
-			connection = DriverManager.getConnection(url, user, pw);
-
-			statement = connection.createStatement();
-
-			return statement.executeUpdate(sql);
+			try (Connection connection = DriverManager.getConnection(url, user, pw);
+			        Statement statement = connection.createStatement()) {
+				return statement.executeUpdate(sql);
+			}
 
 		} catch (SQLException sqlex) {
 			log.error("error executing sql: " + sql, sqlex);
 		} catch (InstantiationException | ClassNotFoundException | IllegalAccessException e) {
 			log.error("Error generated", e);
-		} finally {
-			try {
-				if (statement != null) {
-					statement.close();
-				}
-			} catch (SQLException e) {
-				log.error("Error while closing statement", e);
-			}
-			try {
-
-				if (connection != null) {
-					connection.close();
-				}
-			} catch (Exception e) {
-				log.error("Error while closing connection", e);
-			}
 		}
 
 		return -1;

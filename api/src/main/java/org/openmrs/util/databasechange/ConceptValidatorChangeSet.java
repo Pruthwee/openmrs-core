@@ -16,6 +16,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -437,10 +438,8 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 	private List<Integer> getAllUnretiredConceptIds(JdbcConnection connection) {
 
 		LinkedList<Integer> conceptIds = null;
-		Statement stmt = null;
 
-		try {
-			stmt = connection.createStatement();
+		try (Statement stmt = connection.createStatement()) {
 			ResultSet rs = stmt.executeQuery("SELECT concept_id FROM concept WHERE retired = false");
 
 			while (rs.next()) {
@@ -452,14 +451,6 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 			}
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
 		}
 
 		return conceptIds;
@@ -496,12 +487,10 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 	 */
 	@SuppressWarnings("unchecked")
 	private List<Locale> getAllowedLocalesList(JdbcConnection connection) {
-		Statement stmt = null;
 		ListOrderedSet allowedLocales = new ListOrderedSet();
 
-		try {
-			//get the default locale
-			stmt = connection.createStatement();
+		//get the default locale
+		try (Statement stmt = connection.createStatement()) {
 			ResultSet rsDefaultLocale = stmt.executeQuery("SELECT property_value FROM global_property WHERE property = '"
 			        + OpenmrsConstants.GLOBAL_PROPERTY_DEFAULT_LOCALE + "'");
 
@@ -542,14 +531,6 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 			}
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
 		}
 
 		//if it isn't among
@@ -654,7 +635,7 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 				    (conceptName.getConceptNameType() != null) ? conceptName.getConceptNameType().toString() : null);
 				pStmt.setBoolean(3, conceptName.getLocalePreferred());
 				pStmt.setBoolean(4, conceptName.getVoided());
-				pStmt.setDate(5, conceptName.getVoided() ? new Date(System.currentTimeMillis()) : null);
+				pStmt.setDate(5, conceptName.getVoided() ? new Date(Instant.now().toEpochMilli()) : null);
 				pStmt.setString(6, conceptName.getVoidReason());
 				// "Not all databases allow for a non-typed Null to be sent to the backend", so we can't use setInt
 				pStmt.setObject(7, (conceptName.getVoided() && userId != null) ? userId : null, Types.INTEGER);
@@ -726,10 +707,8 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 	 * @return integer resulting from the execution of the sql statement
 	 */
 	private int getInt(JdbcConnection connection, String sql) {
-		Statement stmt = null;
 		int result = 0;
-		try {
-			stmt = connection.createStatement();
+		try (Statement stmt = connection.createStatement()) {
 			ResultSet rs = stmt.executeQuery(sql);
 
 			if (rs.next()) {
@@ -745,14 +724,6 @@ public class ConceptValidatorChangeSet implements CustomTaskChange {
 			return result;
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
 		}
 
 		return result;

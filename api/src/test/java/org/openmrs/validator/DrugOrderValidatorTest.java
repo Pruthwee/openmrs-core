@@ -10,8 +10,10 @@
 package org.openmrs.validator;
 
 import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import org.junit.jupiter.api.Test;
 import org.openmrs.CareSetting;
@@ -117,7 +119,7 @@ public class DrugOrderValidatorTest extends BaseContextSensitiveTest {
 		order.setPatient(patient);
 		encounter.setPatient(patient);
 		order.setEncounter(encounter);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(cal.getTime());
 		order.setAutoExpireDate(new Date());
@@ -566,7 +568,7 @@ public class DrugOrderValidatorTest extends BaseContextSensitiveTest {
 		order.setPatient(patient);
 		encounter.setPatient(patient);
 		order.setEncounter(encounter);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(cal.getTime());
 		order.setAutoExpireDate(new Date());
@@ -762,7 +764,7 @@ public class DrugOrderValidatorTest extends BaseContextSensitiveTest {
 		order.setPatient(patient);
 		encounter.setPatient(patient);
 		order.setEncounter(encounter);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(cal.getTime());
 		order.setAutoExpireDate(new Date());
@@ -797,7 +799,7 @@ public class DrugOrderValidatorTest extends BaseContextSensitiveTest {
 		order.setPatient(patient);
 		encounter.setPatient(patient);
 		order.setEncounter(encounter);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(Calendar.DAY_OF_MONTH, cal.get(Calendar.DAY_OF_MONTH) - 1);
 		order.setDateActivated(cal.getTime());
 		order.setAutoExpireDate(new Date());

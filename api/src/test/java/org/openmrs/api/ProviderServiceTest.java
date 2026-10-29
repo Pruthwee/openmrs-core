@@ -10,10 +10,12 @@
 package org.openmrs.api;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -359,7 +361,7 @@ public class ProviderServiceTest extends BaseContextSensitiveTest {
 	@Test
 	public void getProviders_shouldGetAllProvidersWithGivenAttributeValues() throws ParseException {
 		Map<ProviderAttributeType, Object> attributes = new HashMap<>();
-		attributes.put(service.getProviderAttributeType(1), new SimpleDateFormat("yyyy-MM-dd").parse("2011-04-25"));
+		attributes.put(service.getProviderAttributeType(1), Date.from(LocalDate.parse("2011-04-25").atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		List<Provider> providers = service.getProviders("RobertClive", 0, null, attributes);
 		assertEquals(1, providers.size());
 		assertEquals(Integer.valueOf(1), providers.get(0).getProviderId());
@@ -372,7 +374,7 @@ public class ProviderServiceTest extends BaseContextSensitiveTest {
 	@Test
 	public void getProviders_shouldNotFindAnyProvidersIfNoneHaveGivenAttributeValues() throws ParseException {
 		Map<ProviderAttributeType, Object> attributes = new HashMap<>();
-		attributes.put(service.getProviderAttributeType(1), new SimpleDateFormat("yyyy-MM-dd").parse("1411-04-25"));
+		attributes.put(service.getProviderAttributeType(1), Date.from(LocalDate.parse("1411-04-25").atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		List<Provider> providers = service.getProviders("RobertClive", 0, null, attributes);
 		assertEquals(0, providers.size());
 	}

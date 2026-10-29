@@ -10,6 +10,7 @@
 package org.openmrs.web.security;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Objects;
 
 import jakarta.servlet.FilterChain;
@@ -57,7 +58,7 @@ public class OpenmrsSecurityContextFilter extends OncePerRequestFilter {
 		HttpSession httpSession = httpRequest.getSession();
 
 		// used by htmlInclude tag
-		httpRequest.setAttribute(WebConstants.INIT_REQ_UNIQUE_ID, String.valueOf(System.currentTimeMillis()));
+		httpRequest.setAttribute(WebConstants.INIT_REQ_UNIQUE_ID, String.valueOf(Instant.now().toEpochMilli()));
 
 		log.debug("requestURI {}", httpRequest.getRequestURI());
 		log.debug("requestURL {}", httpRequest.getRequestURL());

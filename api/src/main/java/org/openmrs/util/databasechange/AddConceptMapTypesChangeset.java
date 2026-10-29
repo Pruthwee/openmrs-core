@@ -15,7 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Calendar;
+import java.time.Instant;
 
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.util.DatabaseUpdater;
@@ -102,7 +102,7 @@ public class AddConceptMapTypesChangeset implements CustomTaskChange {
 				pStmt.setString(2, mapType);
 				pStmt.setBoolean(3, false);
 				pStmt.setBoolean(4, false);
-				pStmt.setDate(5, new Date(Calendar.getInstance().getTimeInMillis()));
+				pStmt.setDate(5, new Date(Instant.now().toEpochMilli()));
 				pStmt.setString(6, mapUuid);
 				pStmt.addBatch();
 
@@ -118,7 +118,7 @@ public class AddConceptMapTypesChangeset implements CustomTaskChange {
 				pStmt.setString(2, mapType);
 				pStmt.setBoolean(3, true);
 				pStmt.setBoolean(4, false);
-				pStmt.setDate(5, new Date(Calendar.getInstance().getTimeInMillis()));
+				pStmt.setDate(5, new Date(Instant.now().toEpochMilli()));
 				pStmt.setString(6, mapUuid);
 				pStmt.addBatch();
 
@@ -191,10 +191,8 @@ public class AddConceptMapTypesChangeset implements CustomTaskChange {
 	 * @return integer resulting from the execution of the sql statement
 	 */
 	private int getInt(JdbcConnection connection, String sql) {
-		Statement stmt = null;
 		int result = 0;
-		try {
-			stmt = connection.createStatement();
+		try (Statement stmt = connection.createStatement()) {
 			ResultSet rs = stmt.executeQuery(sql);
 
 			if (rs.next()) {
@@ -210,14 +208,6 @@ public class AddConceptMapTypesChangeset implements CustomTaskChange {
 			return result;
 		} catch (DatabaseException | SQLException e) {
 			log.warn("Error generated", e);
-		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					log.warn("Failed to close the statement object");
-				}
-			}
 		}
 
 		return result;

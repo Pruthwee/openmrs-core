@@ -15,9 +15,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -154,7 +156,7 @@ public class SchedulerServiceIT extends BaseContextSensitiveNonTransactionalTest
 
 	@Test
 	void scheduleTask_shouldHandleZeroRepeatInterval() throws SchedulerException, InterruptedException {
-		Calendar startTime = Calendar.getInstance();
+		Calendar startTime = GregorianCalendar.from(ZonedDateTime.now());
 
 		TaskDefinition task = new TaskDefinition();
 		task.setName("scheduleTask_shouldHandleZeroRepeatInterval");
@@ -615,8 +617,8 @@ public class SchedulerServiceIT extends BaseContextSensitiveNonTransactionalTest
 	}
 
 	private void waitForExecutedCount(int moreThan) throws InterruptedException {
-		long start = System.currentTimeMillis();
-		while (System.currentTimeMillis() - start < 60000) {
+		long start = Instant.now().toEpochMilli();
+		while (Instant.now().toEpochMilli() - start < 60000) {
 			int executedCount = 0;
 			try (PreparedStatement statement = Context.getDatabaseConnection()
 			        .prepareStatement("SELECT property_value FROM global_property WHERE property = ?")) {

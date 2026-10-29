@@ -9,7 +9,9 @@
  */
 package org.openmrs.api.handler;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,7 +64,7 @@ public class ExistingVisitAssignmentHandlerTest extends BaseContextSensitiveTest
 		Encounter encounter = Context.getEncounterService().getEncounter(1);
 		assertNull(encounter.getVisit());
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.setTime(encounter.getEncounterDatetime());
 		calendar.set(Calendar.YEAR, 1900);
 
@@ -83,7 +85,7 @@ public class ExistingVisitAssignmentHandlerTest extends BaseContextSensitiveTest
 
 		//set the visit stop date to that before the encounter date
 		Visit visit = Context.getVisitService().getVisit(1);
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.setTime(visit.getStartDatetime());
 		calendar.set(Calendar.YEAR, 2004);
 		visit.setStopDatetime(calendar.getTime());

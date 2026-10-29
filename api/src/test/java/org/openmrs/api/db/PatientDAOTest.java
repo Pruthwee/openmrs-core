@@ -15,6 +15,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -2464,49 +2465,49 @@ public class PatientDAOTest extends BaseContextSensitiveTest {
 
 		long time = System.currentTimeMillis();
 		updateSearchIndex();
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Indexing took " + time + " ms.");
 
 		patientService.getPatients("Aaaaa"); //get Lucene up to speed...
 
 		time = System.currentTimeMillis();
 		List<Patient> results = patientService.getPatients("Al");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Starts with search for 'Al' name returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("Al", 0, 15);
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Starts with search for 'Al' name limited to 15 results returned in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("Al Dem");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Starts with search for 'Al Dem' name returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("Al Dem", 0, 15);
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Starts with search for 'Al Dem' name limited to 15 results returned in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("Jack");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Starts with search for 'Jack' name returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("Jack", 0, 15);
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Starts with search for 'Jack' name limited to 15 results returned in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("Jack Sehgal");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Starts with search for 'Jack Sehgal' name returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("Jack Sehgal", 0, 15);
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Starts with search for 'Jack Sehgal' name limited to 15 results returned in " + time + " ms");
 
 		Context.getAdministrationService().setGlobalProperty(OpenmrsConstants.GLOBAL_PROPERTY_PATIENT_SEARCH_MATCH_MODE,
@@ -2514,37 +2515,37 @@ public class PatientDAOTest extends BaseContextSensitiveTest {
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("aso");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Anywhere search for 'aso' name returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("aso", 0, 15);
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Anywhere search for 'aso' name limited to 15 results returned in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("aso os");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Anywhere search for 'aso os' name returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("aso os", 0, 15);
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Anywhere search for 'aso os' limited to 15 results returned in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("9243");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Exact search for '9243' identifier returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("London");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Exact search for 'London' attribute returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("London", 0, 15);
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Exact search for 'London' attribute limited to 15 results returned in " + time + " ms");
 
 		Context.getAdministrationService().setGlobalProperty(
@@ -2553,12 +2554,12 @@ public class PatientDAOTest extends BaseContextSensitiveTest {
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("uric");
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Anywhere search for 'uric' attribute returned " + results.size() + " in " + time + " ms");
 
 		time = System.currentTimeMillis();
 		results = patientService.getPatients("uric", 0, 15);
-		time = System.currentTimeMillis() - time;
+		time = Instant.now().toEpochMilli() - time;
 		System.out.println("Anywhere search for 'uric' attribute limited to 15 results returned in " + time + " ms");
 	}
 

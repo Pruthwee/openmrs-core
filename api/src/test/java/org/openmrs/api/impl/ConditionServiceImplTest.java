@@ -9,8 +9,10 @@
  */
 package org.openmrs.api.impl;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 
@@ -132,7 +134,7 @@ public class ConditionServiceImplTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void saveCondition_shouldRetainPropertiesOfCondition() throws Exception {
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		DateTimeFormatter df = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
 		// setup
 		Condition c = new Condition();
 		CodedOrFreeText codedOrFreeText = new CodedOrFreeText();
@@ -142,8 +144,8 @@ public class ConditionServiceImplTest extends BaseContextSensitiveTest {
 		c.setClinicalStatus(ConditionClinicalStatus.INACTIVE);
 		c.setVerificationStatus(ConditionVerificationStatus.CONFIRMED);
 		c.setAdditionalDetail("Additional information");
-		c.setOnsetDate(df.parse("2021-06-30"));
-		c.setEndDate(df.parse("2022-01-25"));
+		c.setOnsetDate(Date.from(LocalDate.parse("2021-06-30", df).atStartOfDay(ZoneId.systemDefault()).toInstant()));
+		c.setEndDate(Date.from(LocalDate.parse("2022-01-25", df).atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		c.setEndReason("This is an end reason");
 		c.setPatient(patientService.getPatient(2));
 		c.setEncounter(encounterService.getEncounter(6));
@@ -168,8 +170,8 @@ public class ConditionServiceImplTest extends BaseContextSensitiveTest {
 		assertEquals(ConditionVerificationStatus.CONFIRMED, c2.getVerificationStatus());
 		assertEquals("Additional information", c1.getAdditionalDetail());
 		assertEquals("Edited info", c2.getAdditionalDetail());
-		assertEquals("2021-06-30", df.format(c2.getOnsetDate()));
-		assertEquals("2022-01-25", df.format(c2.getEndDate()));
+		assertEquals("2021-06-30", df.format(Instant.ofEpochMilli(c2.getOnsetDate().getTime())));
+		assertEquals("2022-01-25", df.format(Instant.ofEpochMilli(c2.getEndDate().getTime())));
 		// assertEquals("This is an end reason", c2.getEndReason()); // End reason is not persisted in the DB
 		assertEquals(2, c2.getPatient().getPatientId());
 		assertEquals(6, c2.getEncounter().getEncounterId());

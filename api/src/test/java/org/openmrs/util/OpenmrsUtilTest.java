@@ -20,10 +20,12 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -1029,7 +1031,7 @@ public class OpenmrsUtilTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void isValidNumericValue_shouldReturnErrorMessageWhenValueIsBelowLowAbsolute() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -10);
 		Person person = new Person(10);
 		person.setBirthdate(calendar.getTime());
@@ -1045,7 +1047,7 @@ public class OpenmrsUtilTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void isValidNumericValue_shouldReturnErrorMessageWhenValueIsAboveHiAbsolute() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -10);
 		Person person = new Person(10);
 		person.setBirthdate(calendar.getTime());
@@ -1061,7 +1063,7 @@ public class OpenmrsUtilTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void isValidNumericValue_shouldNotReturnErrorMessageWhenNoReferenceRangeIsAvailable() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -10);
 		Person person = new Person(10);
 		person.setBirthdate(calendar.getTime());

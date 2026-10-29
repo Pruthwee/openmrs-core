@@ -28,18 +28,24 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -116,6 +122,10 @@ import org.w3c.dom.DocumentType;
  * Utility methods used in openmrs
  */
 public class OpenmrsUtil {
+
+	private static final int CONNECT_TIMEOUT_MS = 5000;
+
+	private static final int READ_TIMEOUT_MS = 30000;
 
 	private OpenmrsUtil() {
 	}
@@ -794,7 +804,7 @@ public class OpenmrsUtil {
 	 * @return the date with the last millisecond of the day.
 	 */
 	public static Date getLastMomentOfDay(Date day) {
-		Calendar calender = Calendar.getInstance();
+		Calendar calender = GregorianCalendar.from(ZonedDateTime.now());
 		calender.setTime(day);
 		calender.set(Calendar.HOUR_OF_DAY, 23);
 		calender.set(Calendar.MINUTE, 59);
@@ -817,7 +827,7 @@ public class OpenmrsUtil {
 			return null;
 		}
 
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		c.setTime(date);
 		c.set(Calendar.HOUR_OF_DAY, 0);
 		c.set(Calendar.MINUTE, 0);
@@ -914,7 +924,7 @@ public class OpenmrsUtil {
 			return new BufferedInputStream(new FileInputStream(file));
 		}
 		if (!"jar".equalsIgnoreCase(url.getProtocol())) {
-			return url.openStream();
+			return openStreamWithTimeouts(url);
 		}
 		String urlStr = url.toExternalForm();
 		if (urlStr.endsWith("!/")) {
@@ -928,7 +938,7 @@ public class OpenmrsUtil {
 		String path = urlStr.substring(p + 2);
 		file = url2file(new URL(urlStr.substring(4, p)));
 		if (file == null) {// non-local JAR file URL
-			return url.openStream();
+			return openStreamWithTimeouts(url);
 		}
 		try (JarFile jarFile = new JarFile(file)) {
 			ZipEntry entry = jarFile.getEntry(path);
@@ -941,6 +951,13 @@ public class OpenmrsUtil {
 				return new ByteArrayInputStream(out.toByteArray());
 			}
 		}
+	}
+
+	private static InputStream openStreamWithTimeouts(URL url) throws IOException {
+		URLConnection connection = url.openConnection();
+		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+		connection.setReadTimeout(READ_TIMEOUT_MS);
+		return connection.getInputStream();
 	}
 
 	/**
@@ -1194,7 +1211,7 @@ public class OpenmrsUtil {
 
 		Date ret = null;
 		if (withinLastDays != null || withinLastMonths != null) {
-			Calendar gc = Calendar.getInstance();
+			Calendar gc = GregorianCalendar.from(ZonedDateTime.now());
 			gc.setTime(comparisonDate != null ? comparisonDate : new Date());
 			if (withinLastDays != null) {
 				gc.add(Calendar.DAY_OF_MONTH, -withinLastDays);
@@ -1215,7 +1232,7 @@ public class OpenmrsUtil {
 
 		Date ret = null;
 		if (untilDaysAgo != null || untilMonthsAgo != null) {
-			Calendar gc = Calendar.getInstance();
+			Calendar gc = GregorianCalendar.from(ZonedDateTime.now());
 			gc.setTime(comparisonDate != null ? comparisonDate : new Date());
 			if (untilDaysAgo != null) {
 				gc.add(Calendar.DAY_OF_MONTH, -untilDaysAgo);
@@ -1488,7 +1505,8 @@ public class OpenmrsUtil {
 		File outFile;
 		do {
 			// format to print date in filename
-			DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd-HHmm-ssSSS");
+			DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy.MM.dd-HHmm-ssSSS")
+			        .withZone(ZoneId.systemDefault());
 
 			// use current date if none provided
 			if (date == null) {
@@ -1498,7 +1516,7 @@ public class OpenmrsUtil {
 			StringBuilder filename = new StringBuilder();
 
 			// the start of the filename is the time so we can do some sorting
-			filename.append(dateFormat.format(date));
+			filename.append(dateFormat.format(Instant.ofEpochMilli(date.getTime())));
 
 			// insert the user id if they provided it
 			if (user != null) {
@@ -2118,10 +2136,10 @@ public class OpenmrsUtil {
 			return false;
 		}
 
-		Calendar c1 = Calendar.getInstance();
+		Calendar c1 = GregorianCalendar.from(ZonedDateTime.now());
 		c1.add(Calendar.DAY_OF_YEAR, -1); // yesterday
 
-		Calendar c2 = Calendar.getInstance();
+		Calendar c2 = GregorianCalendar.from(ZonedDateTime.now());
 		c2.setTime(date);
 
 		return (c1.get(Calendar.ERA) == c2.get(Calendar.ERA) && c1.get(Calendar.YEAR) == c2.get(Calendar.YEAR)

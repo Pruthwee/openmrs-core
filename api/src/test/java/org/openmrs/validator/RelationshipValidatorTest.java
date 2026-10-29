@@ -10,8 +10,10 @@
 package org.openmrs.validator;
 
 import java.text.ParseException;
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,7 +99,7 @@ public class RelationshipValidatorTest extends BaseContextSensitiveTest {
 		Relationship relationship = new Relationship(1);
 		Map<String, String> map = new HashMap<>();
 		MapBindingResult errors = new MapBindingResult(map, Relationship.class.getName());
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.add(Calendar.YEAR, 1);
 		Date nextYear = cal.getTime();
 		relationship.setStartDate(nextYear);
@@ -113,7 +115,7 @@ public class RelationshipValidatorTest extends BaseContextSensitiveTest {
 		Relationship relationship = new Relationship(1);
 		Map<String, String> map = new HashMap<>();
 		MapBindingResult errors = new MapBindingResult(map, Relationship.class.getName());
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.add(Calendar.YEAR, -1);
 		Date lastYear = cal.getTime();
 		relationship.setStartDate(lastYear);

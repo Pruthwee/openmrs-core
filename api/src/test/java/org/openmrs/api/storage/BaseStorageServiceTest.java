@@ -15,8 +15,9 @@ import java.io.UncheckedIOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -51,7 +52,7 @@ public abstract class BaseStorageServiceTest extends BaseContextSensitiveTest {
 
 	protected final String testFile2Content = "This is another test file";
 
-	protected final SimpleDateFormat dirFormat = new SimpleDateFormat("yyyy/MM");
+	protected final DateTimeFormatter dirFormat = DateTimeFormatter.ofPattern("yyyy/MM").withZone(ZoneId.systemDefault());
 
 	protected InputStream testFile;
 
@@ -141,7 +142,7 @@ public abstract class BaseStorageServiceTest extends BaseContextSensitiveTest {
 		saveTestData(null, null, (key) -> {
 			try (InputStream data = storageService.getData(key)) {
 				assertEquals(testFileContent, IOUtils.toString(data, Charset.defaultCharset()));
-				assertThat(key, startsWith(dirFormat.format(new Date())));
+				assertThat(key, startsWith(dirFormat.format(Instant.now())));
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
@@ -154,7 +155,7 @@ public abstract class BaseStorageServiceTest extends BaseContextSensitiveTest {
 			try (InputStream data = storageService.getData(key)) {
 				assertEquals(testFileContent, IOUtils.toString(data, Charset.defaultCharset()));
 				assertThat(key, startsWith("test_module/"));
-				assertThat(key, containsString(dirFormat.format(new Date())));
+				assertThat(key, containsString(dirFormat.format(Instant.now())));
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
 			}
@@ -167,7 +168,7 @@ public abstract class BaseStorageServiceTest extends BaseContextSensitiveTest {
 			try (InputStream data = storageService.getData(key)) {
 				assertEquals(testFileContent, IOUtils.toString(data, Charset.defaultCharset()));
 				assertThat(key, startsWith("test_module/"));
-				assertThat(key, not(containsString(dirFormat.format(new Date()))));
+				assertThat(key, not(containsString(dirFormat.format(Instant.now()))));
 				assertThat(key, endsWith("test_key"));
 			} catch (IOException e) {
 				throw new UncheckedIOException(e);
@@ -192,7 +193,7 @@ public abstract class BaseStorageServiceTest extends BaseContextSensitiveTest {
 					try (InputStream data = storageService.getData(key)) {
 						assertEquals(testFileContent, IOUtils.toString(data, Charset.defaultCharset()));
 						assertThat(newKey, startsWith("test_another_module/"));
-						assertThat(newKey, not(containsString(dirFormat.format(new Date()))));
+						assertThat(newKey, not(containsString(dirFormat.format(Instant.now()))));
 						assertThat(newKey, endsWith(keySuffix));
 					} catch (IOException e) {
 						throw new UncheckedIOException(e);

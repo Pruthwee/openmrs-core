@@ -14,6 +14,9 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -1035,8 +1038,9 @@ public class Obs extends BaseFormRecordableOpenmrsData {
 					}
 				}
 			} else if ("DT".equals(abbrev)) {
-				DateFormat dateFormat = new SimpleDateFormat(DATE_PATTERN);
-				return (getValueDatetime() == null ? "" : dateFormat.format(getValueDatetime()));
+				DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern(DATE_PATTERN).withZone(ZoneId.systemDefault());
+				return (getValueDatetime() == null ? ""
+				        : dateFormat.format(Instant.ofEpochMilli(getValueDatetime().getTime())));
 			} else if ("TM".equals(abbrev)) {
 				return (getValueDatetime() == null ? "" : Format.format(getValueDatetime(), locale, FORMAT_TYPE.TIME));
 			} else if ("TS".equals(abbrev)) {

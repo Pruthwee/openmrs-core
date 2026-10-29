@@ -64,8 +64,10 @@ public class OpenmrsApplicationContextConfig {
 	@Bean
 	public TaskExecutor taskExecutor() {
 		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-		executor.setCorePoolSize(1);
-		executor.setMaxPoolSize(20);
+		// sized from the CPUs the JVM sees, which follows the container's CPU limit on ECS/EKS
+		int coreSize = Math.max(1, Runtime.getRuntime().availableProcessors());
+		executor.setCorePoolSize(coreSize);
+		executor.setMaxPoolSize(Math.max(20, coreSize));
 		executor.setQueueCapacity(1000);
 		return executor;
 	}

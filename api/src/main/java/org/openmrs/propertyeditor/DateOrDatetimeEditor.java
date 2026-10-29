@@ -11,7 +11,11 @@ package org.openmrs.propertyeditor;
 
 import java.beans.PropertyEditorSupport;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,6 +26,14 @@ import org.openmrs.api.context.Context;
  * formats but it does not permit partial dates.
  */
 public class DateOrDatetimeEditor extends PropertyEditorSupport {
+
+	/**
+	 * Prints hour, minute, second and millisecond without padding (equivalent of the SimpleDateFormat
+	 * pattern "HmsS")
+	 */
+	private static final DateTimeFormatter TIME_FIELDS_FORMAT = new DateTimeFormatterBuilder()
+	        .appendValue(ChronoField.HOUR_OF_DAY).appendValue(ChronoField.MINUTE_OF_HOUR)
+	        .appendValue(ChronoField.SECOND_OF_MINUTE).appendValue(ChronoField.MILLI_OF_SECOND).toFormatter();
 
 	/**
 	 * <p>
@@ -65,7 +77,7 @@ public class DateOrDatetimeEditor extends PropertyEditorSupport {
 		if (date == null) {
 			return "";
 		}
-		if ("0000".equals(new SimpleDateFormat("HmsS").format(date))) {
+		if ("0000".equals(TIME_FIELDS_FORMAT.withZone(ZoneId.systemDefault()).format(Instant.ofEpochMilli(date.getTime())))) {
 			return Context.getDateFormat().format(date);
 		} else {
 			return Context.getDateTimeFormat().format(date);

@@ -9,7 +9,10 @@
  */
 package org.openmrs;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -35,14 +38,22 @@ public class CohortMembershipTest {
 
 	private final int TIMESTAMP_END_DATE = 1577836801;
 
+	private static Date parseDateTime(String s) {
+		return Date.from(LocalDateTime.parse(s, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+		        .atZone(ZoneId.systemDefault()).toInstant());
+	}
+
+	private static Date parseDate(String s) {
+		return Date.from(LocalDate.parse(s).atStartOfDay(ZoneId.systemDefault()).toInstant());
+	}
+
 	@Test
 	public void isMembershipActive_shouldReturnTrueIfAsOfDateIsAfterStartDate() throws Exception {
 		CohortMembership newMember = new CohortMembership(4);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2017-01-01 00:00:00");
+		Date startDate = parseDateTime("2017-01-01 00:00:00");
 		newMember.setStartDate(startDate);
 
-		Date dateToTest = dateFormat.parse("2017-01-01 12:00:00");
+		Date dateToTest = parseDateTime("2017-01-01 12:00:00");
 		assertTrue(newMember.isActive(dateToTest));
 		assertTrue(newMember.isActive(new Date()));
 		assertTrue(newMember.isActive(startDate));
@@ -51,25 +62,23 @@ public class CohortMembershipTest {
 	@Test
 	public void isActive_shouldReturnFalseIfStartDateIsAfterAsOfDate() throws Exception {
 		CohortMembership newMember = new CohortMembership(4);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2017-01-01 00:00:00");
+		Date startDate = parseDateTime("2017-01-01 00:00:00");
 		newMember.setStartDate(startDate);
 
-		Date dateToTest = dateFormat.parse("2016-12-01 00:00:00");
+		Date dateToTest = parseDateTime("2016-12-01 00:00:00");
 		assertFalse(newMember.isActive(dateToTest));
 	}
 
 	@Test
 	public void isActive_shouldBeInactiveAsOfDateForVoidedMembership() throws Exception {
 		CohortMembership newMember = new CohortMembership(4);
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2017-01-01 00:00:00");
-		Date endDate = dateFormat.parse("2017-01-31 00:00:00");
+		Date startDate = parseDateTime("2017-01-01 00:00:00");
+		Date endDate = parseDateTime("2017-01-31 00:00:00");
 		newMember.setStartDate(startDate);
 		newMember.setEndDate(endDate);
 		newMember.setVoided(true);
 
-		Date dateToTest = dateFormat.parse("2017-02-01 00:00:00");
+		Date dateToTest = parseDateTime("2017-02-01 00:00:00");
 		assertFalse(newMember.isActive(dateToTest));
 	}
 
@@ -124,9 +133,8 @@ public class CohortMembershipTest {
 		firstMembership.setCohort(cohort);
 		secondMembership.setCohort(cohort);
 
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date oneDate = dateFormat.parse("2017-01-01 00:00:00");
-		Date twoDate = dateFormat.parse("2017-01-31 00:00:00");
+		Date oneDate = parseDateTime("2017-01-01 00:00:00");
+		Date twoDate = parseDateTime("2017-01-31 00:00:00");
 
 		firstMembership.setStartDate(oneDate);
 		secondMembership.setStartDate(twoDate);
@@ -148,9 +156,8 @@ public class CohortMembershipTest {
 		firstMembership.setCohort(cohort);
 		secondMembership.setCohort(cohort);
 
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date oneDate = dateFormat.parse("2017-01-01 00:00:00");
-		Date twoDate = dateFormat.parse("2017-01-31 00:00:00");
+		Date oneDate = parseDateTime("2017-01-01 00:00:00");
+		Date twoDate = parseDateTime("2017-01-31 00:00:00");
 
 		firstMembership.setStartDate(oneDate);
 		secondMembership.setStartDate(oneDate);
@@ -173,9 +180,8 @@ public class CohortMembershipTest {
 		firstMembership.setCohort(cohort);
 		secondMembership.setCohort(cohort);
 
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date oneDate = dateFormat.parse("2017-01-01 00:00:00");
-		Date twoDate = dateFormat.parse("2017-01-31 00:00:00");
+		Date oneDate = parseDateTime("2017-01-01 00:00:00");
+		Date twoDate = parseDateTime("2017-01-31 00:00:00");
 
 		firstMembership.setStartDate(oneDate);
 		secondMembership.setEndDate(twoDate);
@@ -211,8 +217,6 @@ public class CohortMembershipTest {
 
 	@Test
 	public void compareTo_shouldSort() throws Exception {
-		SimpleDateFormat ymd = new SimpleDateFormat("yyyy-MM-dd");
-
 		Cohort c1 = new Cohort();
 		c1.setCohortId(1);
 		Cohort c2 = new Cohort();
@@ -234,22 +238,22 @@ public class CohortMembershipTest {
 		// ended goes towards the end, and longer ago goes further at the end
 		CohortMembership endedLongAgo = new CohortMembership(1);
 		endedLongAgo.setCohort(c1);
-		endedLongAgo.setEndDate(ymd.parse("2015-01-01"));
+		endedLongAgo.setEndDate(parseDate("2015-01-01"));
 		endedLongAgo.setUuid("ended 2015");
 		CohortMembership endedRecently = new CohortMembership(2);
 		endedRecently.setCohort(c1);
-		endedRecently.setStartDate(ymd.parse("2016-01-01"));
-		endedRecently.setEndDate(ymd.parse("2017-02-01"));
+		endedRecently.setStartDate(parseDate("2016-01-01"));
+		endedRecently.setEndDate(parseDate("2017-02-01"));
 		endedRecently.setUuid("ended 2017");
 
 		// active goes towards the front, started more recently goes further to the front
 		CohortMembership startedLongAgo = new CohortMembership(3);
 		startedLongAgo.setCohort(c1);
-		startedLongAgo.setStartDate(ymd.parse("2015-01-01"));
+		startedLongAgo.setStartDate(parseDate("2015-01-01"));
 		startedLongAgo.setUuid("started 2015");
 		CohortMembership startedRecently = new CohortMembership(3);
 		startedRecently.setCohort(c1);
-		startedRecently.setStartDate(ymd.parse("2016-01-01"));
+		startedRecently.setStartDate(parseDate("2016-01-01"));
 		startedRecently.setUuid("started 2016");
 
 		List<CohortMembership> list = Arrays.asList(noStartOrEnd, voided, endedLongAgo, endedRecently, startedLongAgo,

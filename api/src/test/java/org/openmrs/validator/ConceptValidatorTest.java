@@ -9,7 +9,8 @@
  */
 package org.openmrs.validator;
 
-import java.util.Calendar;
+import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -146,7 +147,7 @@ public class ConceptValidatorTest extends BaseContextSensitiveTest {
 		concept = cd4Count;
 		String duplicateName = concept.getFullySpecifiedName(Context.getLocale()).getName();
 		ConceptName newName = new ConceptName(duplicateName, Context.getLocale());
-		newName.setDateCreated(Calendar.getInstance().getTime());
+		newName.setDateCreated(Date.from(Instant.now()));
 		newName.setCreator(Context.getAuthenticatedUser());
 		concept.addName(newName);
 		errors = new BindException(concept, "concept");

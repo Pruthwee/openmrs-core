@@ -9,7 +9,10 @@
  */
 package org.openmrs.customdatatype.datatype;
 
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import org.apache.commons.lang3.StringUtils;
@@ -49,7 +52,8 @@ public class DateDatatype extends SerializingCustomDatatype<Date> {
 			return null;
 		}
 		try {
-			return new SimpleDateFormat(DATE_FORMAT).parse(serializedValue);
+			return Date.from(LocalDate.parse(serializedValue, DateTimeFormatter.ofPattern(DATE_FORMAT))
+			        .atStartOfDay(ZoneId.systemDefault()).toInstant());
 		} catch (Exception ex) {
 			throw new InvalidCustomValueException("Invalid date: " + serializedValue);
 		}
@@ -63,7 +67,8 @@ public class DateDatatype extends SerializingCustomDatatype<Date> {
 	 */
 	@Override
 	public String serialize(Date typedValue) {
-		return new SimpleDateFormat(DATE_FORMAT).format(typedValue);
+		return DateTimeFormatter.ofPattern(DATE_FORMAT).withZone(ZoneId.systemDefault())
+		        .format(Instant.ofEpochMilli(typedValue.getTime()));
 	}
 
 }

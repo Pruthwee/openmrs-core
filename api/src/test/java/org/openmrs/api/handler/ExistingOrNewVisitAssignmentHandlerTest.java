@@ -9,7 +9,9 @@
  */
 package org.openmrs.api.handler;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,7 +66,7 @@ public class ExistingOrNewVisitAssignmentHandlerTest extends BaseContextSensitiv
 		Encounter encounter = Context.getEncounterService().getEncounter(1);
 		assertNull(encounter.getVisit());
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.setTime(encounter.getEncounterDatetime());
 		calendar.set(Calendar.YEAR, 1900);
 
@@ -85,7 +87,7 @@ public class ExistingOrNewVisitAssignmentHandlerTest extends BaseContextSensitiv
 		Encounter encounter = Context.getEncounterService().getEncounter(1);
 		assertNull(encounter.getVisit());
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.setTime(encounter.getEncounterDatetime());
 		calendar.set(Calendar.YEAR, 1900);
 
@@ -105,7 +107,7 @@ public class ExistingOrNewVisitAssignmentHandlerTest extends BaseContextSensitiv
 		Encounter encounter = Context.getEncounterService().getEncounter(1);
 		assertNull(encounter.getVisit());
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.setTime(encounter.getEncounterDatetime());
 		calendar.set(Calendar.YEAR, 1900);
 
@@ -135,7 +137,7 @@ public class ExistingOrNewVisitAssignmentHandlerTest extends BaseContextSensitiv
 		assertNull(encounter.getVisit());
 		assertEquals(encounterTypeUuid, encounter.getEncounterType().getUuid());
 
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.setTime(encounter.getEncounterDatetime());
 		calendar.set(Calendar.YEAR, 1900);
 

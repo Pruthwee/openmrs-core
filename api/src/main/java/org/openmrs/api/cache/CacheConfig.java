@@ -13,6 +13,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -63,6 +64,10 @@ import org.yaml.snakeyaml.Yaml;
 public class CacheConfig {
 
 	private final static Logger log = LoggerFactory.getLogger(CacheConfig.class);
+
+	private static final int CONNECT_TIMEOUT_MS = 5000;
+
+	private static final int READ_TIMEOUT_MS = 30000;
 
 	/**
 	 * The caches that are only filled on a miss, by {@code @Cacheable} or by their owning component,
@@ -142,7 +147,10 @@ public class CacheConfig {
 
 	private static InputStream buildFullConfig(Yaml yaml, URL configFile, Set<String> templateNames, String cacheType)
 	        throws IOException {
-		Map<String, Object> loadedConfig = yaml.load(configFile.openStream());
+		URLConnection connection = configFile.openConnection();
+		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+		connection.setReadTimeout(READ_TIMEOUT_MS);
+		Map<String, Object> loadedConfig = yaml.load(connection.getInputStream());
 
 		Map<String, Object> config = new LinkedHashMap<>();
 		Map<String, Object> cacheContainer = new LinkedHashMap<>();

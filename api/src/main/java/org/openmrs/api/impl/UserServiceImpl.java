@@ -9,6 +9,7 @@
  */
 package org.openmrs.api.impl;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -827,7 +828,7 @@ public class UserServiceImpl extends BaseOpenmrsService implements UserService, 
 		LoginCredential loginCred = dao.getLoginCredentialByActivationKey(activationKey);
 		if (loginCred != null) {
 			String[] credTokens = loginCred.getActivationKey().split(":");
-			if (System.currentTimeMillis() <= Long.parseLong(credTokens[1])) {
+			if (Instant.now().toEpochMilli() <= Long.parseLong(credTokens[1])) {
 				return getUser(loginCred.getUserId());
 			}
 		}
@@ -842,7 +843,7 @@ public class UserServiceImpl extends BaseOpenmrsService implements UserService, 
 	@Override
 	public User setUserActivationKey(User user) throws MessageException {
 		String token = RandomStringUtils.secureStrong().nextAlphanumeric(20);
-		long time = System.currentTimeMillis() + getValidTime();
+		long time = Instant.now().toEpochMilli() + getValidTime();
 		String hashedKey = Security.encodeString(token);
 		String activationKey = hashedKey + ":" + time;
 		LoginCredential credentials = dao.getLoginCredential(user);

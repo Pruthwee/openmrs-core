@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -488,7 +489,7 @@ public class ModuleClassLoaderTest extends BaseContextSensitiveTest {
 			props.setProperty("optimized.startup", "true");
 			Context.setRuntimeProperties(props);
 
-			long currentTimestamp = System.currentTimeMillis();
+			long currentTimestamp = Instant.now().toEpochMilli();
 			omodFile.setLastModified(currentTimestamp);
 
 			Module module = new Module("testmodule", "testmodule", "org.openmrs.module.testmodule", "author", "description",

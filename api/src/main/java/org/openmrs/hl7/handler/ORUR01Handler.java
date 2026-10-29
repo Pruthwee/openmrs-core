@@ -9,10 +9,12 @@
  */
 package org.openmrs.hl7.handler;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -892,7 +894,7 @@ public class ORUR01Handler implements Application {
 	}
 
 	private Date getDate(int year, int month, int day, int hour, int minute, int second) {
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		// Calendar.set(MONTH, int) is zero-based, Hl7 is not
 		cal.set(year, month - 1, day, hour, minute, second);
 		return cal.getTime();
@@ -1181,7 +1183,7 @@ public class ORUR01Handler implements Application {
 		int hour = (dtm.length() >= 10 ? Integer.parseInt(dtm.substring(8, 10)) : 0);
 		int min = (dtm.length() >= 12 ? Integer.parseInt(dtm.substring(10, 12)) : 0);
 		int sec = (dtm.length() >= 14 ? Integer.parseInt(dtm.substring(12, 14)) : 0);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(year, month, day, hour, min, sec);
 
 		return cal.getTime();

@@ -32,6 +32,10 @@ public class CheckInternetConnectivityTask extends AbstractTask {
 	 */
 	private static final Logger log = LoggerFactory.getLogger(CheckInternetConnectivityTask.class);
 
+	private static final int CONNECT_TIMEOUT_MS = 5000;
+
+	private static final int READ_TIMEOUT_MS = 30000;
+
 	/**
 	 * @see org.openmrs.scheduler.tasks.AbstractTask#execute()
 	 */
@@ -42,6 +46,8 @@ public class CheckInternetConnectivityTask extends AbstractTask {
 		String url = "http://www.google.com:80/index.html";
 		try {
 			URLConnection connection = new URL(url).openConnection();
+			connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+			connection.setReadTimeout(READ_TIMEOUT_MS);
 			connection.connect();
 		} catch (IOException ioe) {
 			try {

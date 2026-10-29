@@ -9,6 +9,7 @@
  */
 package org.openmrs.hl7.handler;
 
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -119,7 +120,7 @@ public class ORUR01HandlerTest extends BaseContextSensitiveTest {
 
 		// check for the return visit date obs
 		Concept returnVisitDateConcept = new Concept(5096);
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.set(2008, Calendar.FEBRUARY, 29, 0, 0, 0);
 		Date returnVisitDate = cal.getTime();
 		List<Obs> returnVisitDateObsForPatient3 = obsService.getObservationsByPersonAndConcept(patient,

@@ -56,49 +56,47 @@ public class ConvertOrderersToProviders implements CustomTaskChange {
 		final int batchSize = 1000;
 		int index = 0;
 		PreparedStatement updateStatement = null;
-		Statement statement = connection.createStatement();
-		Boolean autoCommit = null;
-		try {
-			autoCommit = connection.getAutoCommit();
-			connection.setAutoCommit(false);
+		try (Statement statement = connection.createStatement()) {
+			Boolean autoCommit = null;
+			try {
+				autoCommit = connection.getAutoCommit();
+				connection.setAutoCommit(false);
 
-			updateStatement = connection.prepareStatement("UPDATE orders SET orderer = ? WHERE orderer = ?");
-			boolean supportsBatchUpdate = connection.getMetaData().supportsBatchUpdates();
-			for (List<Object> row : usersAndProviders) {
-				updateStatement.setInt(1, (Integer) row.get(1));
-				updateStatement.setInt(2, (Integer) row.get(0));
-				if (supportsBatchUpdate) {
-					updateStatement.addBatch();
-					index++;
-					if (index % batchSize == 0) {
-						updateStatement.executeBatch();
+				updateStatement = connection.prepareStatement("UPDATE orders SET orderer = ? WHERE orderer = ?");
+				boolean supportsBatchUpdate = connection.getMetaData().supportsBatchUpdates();
+				for (List<Object> row : usersAndProviders) {
+					updateStatement.setInt(1, (Integer) row.get(1));
+					updateStatement.setInt(2, (Integer) row.get(0));
+					if (supportsBatchUpdate) {
+						updateStatement.addBatch();
+						index++;
+						if (index % batchSize == 0) {
+							updateStatement.executeBatch();
+						}
+					} else {
+						updateStatement.executeUpdate();
 					}
-				} else {
-					updateStatement.executeUpdate();
 				}
-			}
 
-			if (supportsBatchUpdate) {
-				updateStatement.executeBatch();
-			}
+				if (supportsBatchUpdate) {
+					updateStatement.executeBatch();
+				}
 
-			//Set the orderer for orders with null orderer to Unknown Provider
-			statement.execute("UPDATE orders SET orderer = " + "(SELECT provider_id FROM provider WHERE uuid ="
-			        + "(SELECT property_value FROM global_property WHERE property = '" + ""
-			        + OpenmrsConstants.GP_UNKNOWN_PROVIDER_UUID + "')) " + "WHERE orderer IS NULL");
+				//Set the orderer for orders with null orderer to Unknown Provider
+				statement.execute("UPDATE orders SET orderer = " + "(SELECT provider_id FROM provider WHERE uuid ="
+				        + "(SELECT property_value FROM global_property WHERE property = '" + ""
+				        + OpenmrsConstants.GP_UNKNOWN_PROVIDER_UUID + "')) " + "WHERE orderer IS NULL");
 
-			connection.commit();
-		} catch (DatabaseException | SQLException e) {
-			handleError(connection, e);
-		} finally {
-			if (autoCommit != null) {
-				connection.setAutoCommit(autoCommit);
-			}
-			if (updateStatement != null) {
-				updateStatement.close();
-			}
-			if (statement != null) {
-				statement.close();
+				connection.commit();
+			} catch (DatabaseException | SQLException e) {
+				handleError(connection, e);
+			} finally {
+				if (autoCommit != null) {
+					connection.setAutoCommit(autoCommit);
+				}
+				if (updateStatement != null) {
+					updateStatement.close();
+				}
 			}
 		}
 	}

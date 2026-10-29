@@ -9,6 +9,7 @@
  */
 package org.openmrs.scheduler;
 
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
@@ -28,8 +29,8 @@ public class ScheduledWithLockTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void shouldExecuteScheduledTask() throws InterruptedException {
-		long start = System.currentTimeMillis();
-		while (testTask.getExecutions() == 0 && (System.currentTimeMillis() - start) < 10000) {
+		long start = Instant.now().toEpochMilli();
+		while (testTask.getExecutions() == 0 && (Instant.now().toEpochMilli() - start) < 10000) {
 			Thread.sleep(100);
 		}
 		Assert.assertTrue(testTask.getExecutions() > 0);
@@ -37,8 +38,8 @@ public class ScheduledWithLockTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void shouldExecuteScheduledTaskInComponent() throws InterruptedException {
-		long start = System.currentTimeMillis();
-		while (testComponentTask.getExecutions() == 0 && (System.currentTimeMillis() - start) < 10000) {
+		long start = Instant.now().toEpochMilli();
+		while (testComponentTask.getExecutions() == 0 && (Instant.now().toEpochMilli() - start) < 10000) {
 			Thread.sleep(100);
 		}
 		Assert.assertTrue(testComponentTask.getExecutions() > 0);

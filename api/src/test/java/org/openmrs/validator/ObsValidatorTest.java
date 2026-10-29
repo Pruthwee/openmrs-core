@@ -9,8 +9,10 @@
  */
 package org.openmrs.validator;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -48,7 +50,7 @@ public class ObsValidatorTest extends BaseContextSensitiveTest {
 	@Autowired
 	private ObsValidator obsValidator;
 
-	Calendar calendar = Calendar.getInstance();
+	Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 
 	/**
 	 * @see ObsValidator#validate(java.lang.Object, org.springframework.validation.Errors)
@@ -530,7 +532,7 @@ public class ObsValidatorTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void validate_shouldFailValidationIfObsValueExceedsHiAbsolute() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -10);
 		Person person = new Person(10);
 		person.setBirthdate(calendar.getTime());
@@ -949,7 +951,7 @@ public class ObsValidatorTest extends BaseContextSensitiveTest {
 	}
 
 	private static Obs getObs(int numberOfYears, int conceptId, double valueNumeric) {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.YEAR, -numberOfYears);
 
 		Person person = new Person(10);

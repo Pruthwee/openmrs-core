@@ -9,9 +9,11 @@
  */
 package org.openmrs;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -352,7 +354,7 @@ public class OrderEntryIntegrationTest extends BaseContextSensitiveTest {
 		order.setConcept(conceptService.getConcept(5089));
 		order.setEncounter(encounterService.getEncounter(6));
 		order.setOrderer(providerService.getProvider(1));
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.add(Calendar.DAY_OF_WEEK, -1);
 		order.setDateActivated(cal.getTime());
 		orderService.saveOrder(order, null);
@@ -368,7 +370,7 @@ public class OrderEntryIntegrationTest extends BaseContextSensitiveTest {
 	@Test
 	public void shouldAllowRevisionOfOrdersInRetrospectiveDataEntry() {
 		executeDataSet("org/openmrs/api/include/OrderServiceTest-drugOrderAutoExpireDate.xml");
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.add(Calendar.DAY_OF_WEEK, -20);
 
 		Encounter encounter = new Encounter();

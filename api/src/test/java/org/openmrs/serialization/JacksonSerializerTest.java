@@ -9,8 +9,10 @@
  */
 package org.openmrs.serialization;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +125,7 @@ public class JacksonSerializerTest extends BaseContextSensitiveTest {
 
 		// verify
 		assertTrue("6519d653-393b-4118-9c83-a3715b82d4ac".equals(deserializedEnc.getUuid()));
-		assertEquals(new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse("2008-08-18T14:09:05"),
+		assertEquals(Date.from(LocalDateTime.parse("2008-08-18T14:09:05").atZone(ZoneId.systemDefault()).toInstant()),
 		    deserializedEnc.getDateCreated());
 	}
 

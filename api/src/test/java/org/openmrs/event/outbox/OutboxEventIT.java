@@ -9,6 +9,7 @@
  */
 package org.openmrs.event.outbox;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -275,9 +276,9 @@ public class OutboxEventIT extends BaseContextSensitiveNonTransactionalTest {
 	}
 
 	private void waitForCapturedEvents(int count) throws InterruptedException {
-		long start = System.currentTimeMillis();
+		long start = Instant.now().toEpochMilli();
 		int capturedCount = 0;
-		while (System.currentTimeMillis() - start < 180000) {
+		while (Instant.now().toEpochMilli() - start < 180000) {
 			capturedCount = testOutboxEventListener.getCapturedEvents().size();
 			if (capturedCount >= count) {
 				return;
@@ -288,8 +289,8 @@ public class OutboxEventIT extends BaseContextSensitiveNonTransactionalTest {
 	}
 
 	private void waitForOutboxCompleted() throws InterruptedException {
-		long start = System.currentTimeMillis();
-		while (System.currentTimeMillis() - start < 120000) {
+		long start = Instant.now().toEpochMilli();
+		while (Instant.now().toEpochMilli() - start < 120000) {
 			Long pendingCount = (Long) sessionFactory.getCurrentSession()
 			        .createQuery("select count(id) from OutboxEvent where status != 'COMPLETED'").uniqueResult();
 

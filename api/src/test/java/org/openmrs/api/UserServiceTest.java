@@ -10,6 +10,7 @@
 package org.openmrs.api;
 
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -1642,7 +1643,7 @@ public class UserServiceTest extends BaseContextSensitiveTest {
 		User createdUser = createTestUser();
 		String key = "h4ph0fpNzQCIPSw8plJI";
 		int validTime = 10 * 60 * 1000; //equivalent to 10 minutes for token to be valid
-		Long tokenTime = System.currentTimeMillis() + validTime;
+		Long tokenTime = Instant.now().toEpochMilli() + validTime;
 		LoginCredential credentials = dao.getLoginCredential(createdUser);
 		credentials.setActivationKey(
 		    "b071c88d6d877922e35af2e6a90dd57d37ac61143a03bb986c5f353566f3972a86ce9b2604c31a22dfa467922dcfd54fa7d18b0a7c7648d94ca3d97a88ea2fd0:"
@@ -1656,7 +1657,7 @@ public class UserServiceTest extends BaseContextSensitiveTest {
 		User createdUser = createTestUser();
 		String key = "h4ph0fpNzQCIPSw8plJI";
 		int validTime = 10 * 60 * 1000; //equivalent to 10 minutes for token to be valid
-		Long tokenTime = System.currentTimeMillis() - validTime;
+		Long tokenTime = Instant.now().toEpochMilli() - validTime;
 		LoginCredential credentials = dao.getLoginCredential(createdUser);
 		credentials.setActivationKey(
 		    "b071c88d6d877922e35af2e6a90dd57d37ac61143a03bb986c5f353566f3972a86ce9b2604c31a22dfa467922dcfd54fa7d18b0a7c7648d94ca3d97a88ea2fd0:"
@@ -1670,7 +1671,7 @@ public class UserServiceTest extends BaseContextSensitiveTest {
 		User createdUser = createTestUser();
 		String key = "h4ph0fpNzQCIPSw8plJI";
 		int validTime = 10 * 60 * 1000; //equivalent to 10 minutes for token to be valid
-		Long tokenTime = System.currentTimeMillis() + validTime;
+		Long tokenTime = Instant.now().toEpochMilli() + validTime;
 		LoginCredential credentials = dao.getLoginCredential(createdUser);
 		credentials.setActivationKey(
 		    "b071c88d6d877922e35af2e6a90dd57d37ac61143a03bb986c5f353566f3972a86ce9b2604c31a22dfa467922dcfd54fa7d18b0a7c7648d94ca3d97a88ea2fd0:"
@@ -1701,7 +1702,7 @@ public class UserServiceTest extends BaseContextSensitiveTest {
 		User createdUser = createTestUser();
 		String key = "h4ph0fpNzQCIPSw8plJI";
 		int validTime = 10 * 60 * 1000; //equivalent to 10 minutes for token to be valid
-		Long tokenTime = System.currentTimeMillis() - validTime;
+		Long tokenTime = Instant.now().toEpochMilli() - validTime;
 		LoginCredential credentials = dao.getLoginCredential(createdUser);
 		credentials.setActivationKey(
 		    "b071c88d6d877922e35af2e6a90dd57d37ac61143a03bb986c5f353566f3972a86ce9b2604c31a22dfa467922dcfd54fa7d18b0a7c7648d94ca3d97a88ea2fd0:"

@@ -10,9 +10,14 @@
 package org.openmrs.validator;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -65,7 +70,7 @@ public class PatientProgramValidatorTest extends BaseContextSensitiveTest {
 	public void validate_shouldFailIfAnyPatientStateHasAnEndDateBeforeItsStartDate() {
 		PatientProgram program = Context.getProgramWorkflowService().getPatientProgram(1);
 		PatientState patientState = program.getStates().iterator().next();
-		Calendar c = Calendar.getInstance();
+		Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 		patientState.setStartDate(c.getTime());
 		c.set(1970, 2, 1);//set to an old date
 		patientState.setEndDate(c.getTime());
@@ -313,9 +318,9 @@ public class PatientProgramValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailIfPatientProgramEndDateComesBeforeItsEnrolledDate() throws ParseException {
 		PatientProgram program = Context.getProgramWorkflowService().getPatientProgram(1);
-		SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-		Date dateEnrolled = sdf.parse("12/04/2014");
-		Date dateCompleted = sdf.parse("21/03/2014");
+		DateTimeFormatter sdf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		Date dateEnrolled = Date.from(LocalDate.parse("12/04/2014", sdf).atStartOfDay(ZoneId.systemDefault()).toInstant());
+		Date dateCompleted = Date.from(LocalDate.parse("21/03/2014", sdf).atStartOfDay(ZoneId.systemDefault()).toInstant());
 		program.setDateEnrolled(dateEnrolled);
 		program.setDateCompleted(dateCompleted);
 
@@ -330,7 +335,7 @@ public class PatientProgramValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailIfPatientProgramEnrolledDateIsInFuture() {
 		PatientProgram program = Context.getProgramWorkflowService().getPatientProgram(1);
-		Date date10DaysAfterSystemCurrentDate = new Date(System.currentTimeMillis() + 10 * 24 * 60 * 60 * 1000);
+		Date date10DaysAfterSystemCurrentDate = Date.from(Instant.now().plusMillis(10 * 24 * 60 * 60 * 1000));
 		program.setDateEnrolled(date10DaysAfterSystemCurrentDate);
 
 		BindException errors = new BindException(program, "");
@@ -344,7 +349,7 @@ public class PatientProgramValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailIfPatientProgramEndDateIsInFuture() {
 		PatientProgram program = Context.getProgramWorkflowService().getPatientProgram(1);
-		Date date10DaysAfterSystemCurrentDate = new Date(System.currentTimeMillis() + 10 * 24 * 60 * 60 * 1000);
+		Date date10DaysAfterSystemCurrentDate = Date.from(Instant.now().plusMillis(10 * 24 * 60 * 60 * 1000));
 		program.setDateCompleted(date10DaysAfterSystemCurrentDate);
 
 		BindException errors = new BindException(program, "");

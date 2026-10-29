@@ -69,6 +69,10 @@ public class ModuleUtil {
 
 	private static final Logger log = LoggerFactory.getLogger(ModuleUtil.class);
 
+	private static final int CONNECT_TIMEOUT_MS = 5000;
+
+	private static final int READ_TIMEOUT_MS = 30000;
+
 	/**
 	 * Start up the module system with the given properties.
 	 *
@@ -678,6 +682,8 @@ public class ModuleUtil {
 		InputStream in = null;
 		try {
 			URLConnection uc = url.openConnection();
+			uc.setConnectTimeout(CONNECT_TIMEOUT_MS);
+			uc.setReadTimeout(READ_TIMEOUT_MS);
 			uc.setDefaultUseCaches(false);
 			uc.setUseCaches(false);
 			uc.setRequestProperty("Cache-Control", "max-age=0,no-cache");

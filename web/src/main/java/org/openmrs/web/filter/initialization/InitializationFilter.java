@@ -98,6 +98,8 @@ public class InitializationFilter extends StartupFilter {
 
 	private static final String DATABASE_POSTGRESQL = "postgresql";
 
+	private static final int JDBC_CONNECT_TIMEOUT_MS = 5000;
+
 	private static final String DATABASE_MYSQL = "mysql";
 
 	private static final String DATABASE_SQLSERVER = "sqlserver";
@@ -1034,7 +1036,7 @@ public class InitializationFilter extends StartupFilter {
 		try {
 			// verify connection
 			DatabaseUtil.loadDatabaseDriver(databaseConnectionFinalUrl, loadedDriverString);
-			try (Connection ignored = DriverManager.getConnection(databaseConnectionFinalUrl, connectionUsername,
+			try (Connection ignored = getConnectionWithTimeout(databaseConnectionFinalUrl, connectionUsername,
 			    connectionPassword)) {
 				return true;
 			}
@@ -1200,8 +1202,6 @@ public class InitializationFilter extends StartupFilter {
 	 */
 	private int executeStatement(boolean silent, String user, String pw, String sql, String... args) {
 
-		Connection connection = null;
-		Statement statement = null;
 		try {
 			String replacedSql = sql;
 
@@ -1224,17 +1224,18 @@ public class InitializationFilter extends StartupFilter {
 				tempDatabaseConnection = wizardModel.databaseConnection.replace("@DBNAME@", wizardModel.databaseName);
 			}
 
-			connection = DriverManager.getConnection(tempDatabaseConnection, user, pw);
+			try (Connection connection = getConnectionWithTimeout(tempDatabaseConnection, user, pw)) {
 
-			for (String arg : args) {
-				arg = arg.replace(";", "&#094"); // to prevent any sql injection
-				replacedSql = replacedSql.replaceFirst("\\?", arg);
+				for (String arg : args) {
+					arg = arg.replace(";", "&#094"); // to prevent any sql injection
+					replacedSql = replacedSql.replaceFirst("\\?", arg);
+				}
+
+				// run the sql statement
+				try (Statement statement = connection.createStatement()) {
+					return statement.executeUpdate(replacedSql);
+				}
 			}
-
-			// run the sql statement
-			statement = connection.createStatement();
-
-			return statement.executeUpdate(replacedSql);
 
 		} catch (SQLException sqlex) {
 			if (!silent) {
@@ -1244,25 +1245,28 @@ public class InitializationFilter extends StartupFilter {
 			}
 		} catch (InstantiationException | ClassNotFoundException | IllegalAccessException e) {
 			log.error("Error generated", e);
-		} finally {
-			try {
-				if (statement != null) {
-					statement.close();
-				}
-			} catch (SQLException e) {
-				log.warn("Error while closing statement");
-			}
-			try {
-
-				if (connection != null) {
-					connection.close();
-				}
-			} catch (Exception e) {
-				log.warn("Error while closing connection", e);
-			}
 		}
 
 		return -1;
+	}
+
+	/**
+	 * Opens a JDBC connection. For MySQL and MariaDB urls an explicit connect timeout is passed to the
+	 * driver; other urls are opened exactly as before.
+	 */
+	private static Connection getConnectionWithTimeout(String url, String user, String pw) throws SQLException {
+		if (url != null && (url.startsWith("jdbc:mysql:") || url.startsWith("jdbc:mariadb:"))) {
+			Properties props = new Properties();
+			if (user != null) {
+				props.setProperty("user", user);
+			}
+			if (pw != null) {
+				props.setProperty("password", pw);
+			}
+			props.setProperty("connectTimeout", String.valueOf(JDBC_CONNECT_TIMEOUT_MS));
+			return DriverManager.getConnection(url, props);
+		}
+		return DriverManager.getConnection(url, user, pw);
 	}
 
 	/**

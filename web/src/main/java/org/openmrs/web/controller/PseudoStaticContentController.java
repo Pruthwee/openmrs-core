@@ -10,6 +10,7 @@
 package org.openmrs.web.controller;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Map;
 
 import jakarta.servlet.ServletException;
@@ -40,7 +41,7 @@ public class PseudoStaticContentController implements Controller, GlobalProperty
 
 	private Map<String, String> rewrites;
 
-	private static Long lastModified = System.currentTimeMillis();
+	private static Long lastModified = Instant.now().toEpochMilli();
 
 	public Boolean getInterpretJstl() {
 		return interpretJstl;
@@ -95,13 +96,13 @@ public class PseudoStaticContentController implements Controller, GlobalProperty
 	@Override
 	public void globalPropertyChanged(GlobalProperty newValue) {
 		// reset for every global property change
-		setLastModified(System.currentTimeMillis());
+		setLastModified(Instant.now().toEpochMilli());
 	}
 
 	@Override
 	public void globalPropertyDeleted(String propertyName) {
 		// reset for every global property change
-		setLastModified(System.currentTimeMillis());
+		setLastModified(Instant.now().toEpochMilli());
 	}
 
 	@Override
@@ -110,6 +111,6 @@ public class PseudoStaticContentController implements Controller, GlobalProperty
 	}
 
 	public static void invalidateCachedResources(Map<String, String> newValue) {
-		setLastModified(System.currentTimeMillis());
+		setLastModified(Instant.now().toEpochMilli());
 	}
 }

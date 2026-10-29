@@ -108,22 +108,11 @@ public class GenerateUuid implements CustomTaskChange {
 				for (String tablename : tableNamesArray) {
 					String rawSql = String.format(updateSql, tablename);
 
-					Statement statement = null;
-					try {
-						statement = connection.createStatement();
+					try (Statement statement = connection.createStatement()) {
 						statement.execute(rawSql);
-						statement.close();
 						connection.commit();
 					} catch (SQLException e) {
 						throw new CustomChangeException(e);
-					} finally {
-						if (statement != null) {
-							try {
-								statement.close();
-							} catch (SQLException e) {
-								log.warn("Failed to close the statement", e);
-							}
-						}
 					}
 
 				}
@@ -132,21 +121,17 @@ public class GenerateUuid implements CustomTaskChange {
 				// loop over all tables
 				for (String tableName : tableNamesArray) {
 					try {
-						Statement idStatement = null;
-						PreparedStatement updateStatement = null;
-						try {
-							String idSql = genericIdSql.replaceAll("tablename", tableName);
-							String updateSql = genericUpdateSql.replaceAll("tablename", tableName);
+						String idSql = genericIdSql.replaceAll("tablename", tableName);
+						String updateSql = genericUpdateSql.replaceAll("tablename", tableName);
 
-							// hacky way to deal with tables that don't follow the tableNam_id convention
-							for (Map.Entry<String, String> idException : idExceptionsMap.entrySet()) {
-								idSql = idSql.replaceFirst(idException.getKey(), idException.getValue());
-								updateSql = updateSql.replaceFirst(idException.getKey(), idException.getValue());
-							}
+						// hacky way to deal with tables that don't follow the tableNam_id convention
+						for (Map.Entry<String, String> idException : idExceptionsMap.entrySet()) {
+							idSql = idSql.replaceFirst(idException.getKey(), idException.getValue());
+							updateSql = updateSql.replaceFirst(idException.getKey(), idException.getValue());
+						}
 
-							idStatement = connection.createStatement();
-							updateStatement = connection.prepareStatement(updateSql);
-
+						try (Statement idStatement = connection.createStatement();
+						        PreparedStatement updateStatement = connection.prepareStatement(updateSql)) {
 							ResultSet ids = idStatement.executeQuery(idSql);
 							while (ids.next()) {
 								updateStatement.setObject(2, ids.getObject(1)); // set the primary key number
@@ -157,24 +142,6 @@ public class GenerateUuid implements CustomTaskChange {
 								if (transactionBatchSize > TRANSACTION_BATCH_SIZE_LIMIT) {
 									transactionBatchSize = 0;
 									connection.commit();
-								}
-							}
-
-							idStatement.close();
-							updateStatement.close();
-						} finally {
-							if (idStatement != null) {
-								try {
-									idStatement.close();
-								} catch (SQLException e) {
-									log.warn("Failed to close statement", e);
-								}
-							}
-							if (updateStatement != null) {
-								try {
-									updateStatement.close();
-								} catch (SQLException e) {
-									log.warn("Failed to close the statement", e);
 								}
 							}
 						}

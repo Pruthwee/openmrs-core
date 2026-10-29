@@ -11,11 +11,14 @@ package org.openmrs;
 
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -113,7 +116,7 @@ public class ObsTest {
 		} else if (field.getType().equals(Date.class)) {
 			fieldValue = new Date();
 			if (setAlternateValue) {
-				Calendar c = Calendar.getInstance();
+				Calendar c = GregorianCalendar.from(ZonedDateTime.now());
 				c.add(Calendar.MINUTE, 2);
 				fieldValue = c.getTime();
 			}
@@ -379,7 +382,7 @@ public class ObsTest {
 		obs.setConcept(c);
 		obs.setValueAsString("2023-06-15T10:30:00");
 
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.setTime(obs.getValueDatetime());
 		assertEquals(2023, cal.get(Calendar.YEAR));
 		assertEquals(Calendar.JUNE, cal.get(Calendar.MONTH));
@@ -404,9 +407,8 @@ public class ObsTest {
 		obs.setValueAsString("2023-06-15T10:30:00Z");
 
 		// Z means UTC: assert the stored instant equals 2023-06-15T10:30:00 UTC
-		DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-		assertEquals("2023-06-15T10:30:00", utcFormat.format(obs.getValueDatetime()));
+		DateTimeFormatter utcFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(ZoneId.of("UTC"));
+		assertEquals("2023-06-15T10:30:00", utcFormat.format(Instant.ofEpochMilli(obs.getValueDatetime().getTime())));
 	}
 
 	/**
@@ -424,9 +426,8 @@ public class ObsTest {
 		obs.setValueAsString("2023-06-15T10:30:00+05:00");
 
 		// +05:00 means 5 hours ahead of UTC, so UTC instant is 05:30:00
-		DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-		assertEquals("2023-06-15T05:30:00", utcFormat.format(obs.getValueDatetime()));
+		DateTimeFormatter utcFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(ZoneId.of("UTC"));
+		assertEquals("2023-06-15T05:30:00", utcFormat.format(Instant.ofEpochMilli(obs.getValueDatetime().getTime())));
 	}
 
 	/**
@@ -444,9 +445,8 @@ public class ObsTest {
 		obs.setValueAsString("2023-06-15T10:30:00-05:00");
 
 		// -05:00 means 5 hours behind UTC, so UTC instant is 15:30:00
-		DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-		assertEquals("2023-06-15T15:30:00", utcFormat.format(obs.getValueDatetime()));
+		DateTimeFormatter utcFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(ZoneId.of("UTC"));
+		assertEquals("2023-06-15T15:30:00", utcFormat.format(Instant.ofEpochMilli(obs.getValueDatetime().getTime())));
 	}
 
 	/**
@@ -464,9 +464,8 @@ public class ObsTest {
 		obs.setValueAsString("2022-02-19T08:26:00.000-0500");
 
 		// -0500 (no colon) means 5 hours behind UTC, so UTC instant is 13:26:00
-		DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-		assertEquals("2022-02-19T13:26:00", utcFormat.format(obs.getValueDatetime()));
+		DateTimeFormatter utcFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(ZoneId.of("UTC"));
+		assertEquals("2022-02-19T13:26:00", utcFormat.format(Instant.ofEpochMilli(obs.getValueDatetime().getTime())));
 	}
 
 	/**
@@ -483,9 +482,8 @@ public class ObsTest {
 		obs.setConcept(c);
 		obs.setValueAsString("2023-06-15T10:30:00.123Z");
 
-		DateFormat utcFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-		utcFormat.setTimeZone(java.util.TimeZone.getTimeZone("UTC"));
-		assertEquals("2023-06-15T10:30:00", utcFormat.format(obs.getValueDatetime()));
+		DateTimeFormatter utcFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss").withZone(ZoneId.of("UTC"));
+		assertEquals("2023-06-15T10:30:00", utcFormat.format(Instant.ofEpochMilli(obs.getValueDatetime().getTime())));
 	}
 
 	/**
@@ -503,7 +501,7 @@ public class ObsTest {
 		obs.setValueAsString("2023-06-15 10:30");
 
 		assertNotNull(obs.getValueDatetime());
-		Calendar cal = Calendar.getInstance();
+		Calendar cal = GregorianCalendar.from(ZonedDateTime.now());
 		cal.setTime(obs.getValueDatetime());
 		assertEquals(2023, cal.get(Calendar.YEAR));
 		assertEquals(Calendar.JUNE, cal.get(Calendar.MONTH));
@@ -565,8 +563,8 @@ public class ObsTest {
 		obs.setConcept(cn);
 
 		Date utilDate = new Date();
-		DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		String dateString = dateFormat.format(utilDate);
+		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd").withZone(ZoneId.systemDefault());
+		String dateString = dateFormat.format(Instant.ofEpochMilli(utilDate.getTime()));
 		assertEquals(dateString, obs.getValueAsString(Locale.US));
 	}
 

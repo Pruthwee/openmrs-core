@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -233,26 +235,29 @@ public class LayoutTemplateTest {
 		CountDownLatch finished = new CountDownLatch(threads);
 		List<Throwable> failures = new CopyOnWriteArrayList<>();
 
-		for (int i = 0; i < threads; i++) {
-			Thread thread = new Thread(() -> {
-				try {
-					start.await();
-					for (int j = 0; j < 2000; j++) {
-						assertEquals(expected, projectLines(template.getLines()));
+		ExecutorService executor = Executors.newFixedThreadPool(threads);
+		try {
+			for (int i = 0; i < threads; i++) {
+				executor.submit(() -> {
+					try {
+						start.await();
+						for (int j = 0; j < 2000; j++) {
+							assertEquals(expected, projectLines(template.getLines()));
+						}
+					} catch (Throwable t) {
+						failures.add(t);
+					} finally {
+						finished.countDown();
 					}
-				} catch (Throwable t) {
-					failures.add(t);
-				} finally {
-					finished.countDown();
-				}
-			});
-			thread.setDaemon(true);
-			thread.start();
-		}
+				});
+			}
 
-		start.countDown();
-		assertTrue(finished.await(30, TimeUnit.SECONDS), "concurrent readers did not finish in time");
-		assertTrue(failures.isEmpty(), () -> "concurrent readers saw inconsistent lines: " + failures);
+			start.countDown();
+			assertTrue(finished.await(30, TimeUnit.SECONDS), "concurrent readers did not finish in time");
+			assertTrue(failures.isEmpty(), () -> "concurrent readers saw inconsistent lines: " + failures);
+		} finally {
+			executor.shutdownNow();
+		}
 	}
 
 	@Test

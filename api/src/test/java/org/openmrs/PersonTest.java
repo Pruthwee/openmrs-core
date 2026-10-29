@@ -9,18 +9,23 @@
  */
 package org.openmrs;
 
-import java.text.DateFormat;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.junit.jupiter.api.Test;
 import org.openmrs.test.jupiter.BaseContextSensitiveTest;
@@ -272,7 +277,7 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void shouldSetInexactBirthdateFromAge() throws ParseException {
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+		Function<String, Date> df = s -> Date.from(LocalDate.parse(s).atStartOfDay(ZoneId.systemDefault()).toInstant());
 		Person p = new Person();
 
 		// Test that default values are correct
@@ -280,17 +285,17 @@ public class PersonTest extends BaseContextSensitiveTest {
 		assertFalse(p.getBirthdateEstimated());
 
 		// Test standard case and ensure estimated field is set to true
-		p.setBirthdateFromAge(10, df.parse("2008-05-20"));
-		assertEquals(p.getBirthdate(), df.parse("1998-01-01"));
+		p.setBirthdateFromAge(10, df.apply("2008-05-20"));
+		assertEquals(p.getBirthdate(), df.apply("1998-01-01"));
 		assertTrue(p.getBirthdateEstimated());
 
 		// Test boundary cases
-		p.setBirthdateFromAge(52, df.parse("2002-01-01"));
-		assertEquals(p.getBirthdate(), df.parse("1950-01-01"));
-		p.setBirthdateFromAge(35, df.parse("2004-12-31"));
-		assertEquals(p.getBirthdate(), df.parse("1969-01-01"));
-		p.setBirthdateFromAge(0, df.parse("2008-05-20"));
-		assertEquals(p.getBirthdate(), df.parse("2008-01-01"));
+		p.setBirthdateFromAge(52, df.apply("2002-01-01"));
+		assertEquals(p.getBirthdate(), df.apply("1950-01-01"));
+		p.setBirthdateFromAge(35, df.apply("2004-12-31"));
+		assertEquals(p.getBirthdate(), df.apply("1969-01-01"));
+		p.setBirthdateFromAge(0, df.apply("2008-05-20"));
+		assertEquals(p.getBirthdate(), df.apply("2008-01-01"));
 	}
 
 	/**
@@ -298,9 +303,9 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAge_shouldGetAgeAfterBirthday() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(2006, Calendar.JUNE, 2);
-		Calendar onDate = Calendar.getInstance();
+		Calendar onDate = GregorianCalendar.from(ZonedDateTime.now());
 		onDate.set(2008, Calendar.JUNE, 3);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -312,9 +317,9 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAge_shouldGetAgeBeforeBirthday() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(2006, Calendar.JUNE, 2);
-		Calendar onDate = Calendar.getInstance();
+		Calendar onDate = GregorianCalendar.from(ZonedDateTime.now());
 		onDate.set(2008, Calendar.JUNE, 1);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -326,9 +331,9 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAge_shouldGetAgeOnBirthdayWithMinutesDefined() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(2006, Calendar.JUNE, 2, 9, 9, 9);
-		Calendar onDate = Calendar.getInstance();
+		Calendar onDate = GregorianCalendar.from(ZonedDateTime.now());
 		onDate.set(2008, Calendar.JUNE, 2, 7, 7, 7);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -340,9 +345,9 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAge_shouldGetAgeOnBirthdayWithNoMinutesDefined() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(2006, Calendar.JUNE, 2);
-		Calendar onDate = Calendar.getInstance();
+		Calendar onDate = GregorianCalendar.from(ZonedDateTime.now());
 		onDate.set(2008, Calendar.JUNE, 2);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -354,9 +359,9 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAge_shouldGetAgeAfterDeath() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(1990, Calendar.JUNE, 2);
-		Calendar deathDate = Calendar.getInstance();
+		Calendar deathDate = GregorianCalendar.from(ZonedDateTime.now());
 		deathDate.set(2000, Calendar.JUNE, 3);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -370,11 +375,11 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAge_shouldGetAgeWithGivenDateAfterDeath() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(1990, Calendar.JUNE, 2);
-		Calendar deathDate = Calendar.getInstance();
+		Calendar deathDate = GregorianCalendar.from(ZonedDateTime.now());
 		deathDate.set(2000, Calendar.JUNE, 3);
-		Calendar givenDate = Calendar.getInstance();
+		Calendar givenDate = GregorianCalendar.from(ZonedDateTime.now());
 		givenDate.set(2010, Calendar.JUNE, 3);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -388,11 +393,11 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAge_shouldGetAgeWithGivenDateBeforeDeath() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(1990, Calendar.JUNE, 2);
-		Calendar deathDate = Calendar.getInstance();
+		Calendar deathDate = GregorianCalendar.from(ZonedDateTime.now());
 		deathDate.set(2000, Calendar.JUNE, 3);
-		Calendar givenDate = Calendar.getInstance();
+		Calendar givenDate = GregorianCalendar.from(ZonedDateTime.now());
 		givenDate.set(1995, Calendar.JUNE, 3);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -406,11 +411,11 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAge_shouldGetAgeWithGivenDateBeforeBirth() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(1990, Calendar.JUNE, 2);
-		Calendar deathDate = Calendar.getInstance();
+		Calendar deathDate = GregorianCalendar.from(ZonedDateTime.now());
 		deathDate.set(2000, Calendar.JUNE, 3);
-		Calendar givenDate = Calendar.getInstance();
+		Calendar givenDate = GregorianCalendar.from(ZonedDateTime.now());
 		givenDate.set(1985, Calendar.JUNE, 3);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -645,10 +650,12 @@ public class PersonTest extends BaseContextSensitiveTest {
 	public void getBirthDateTime_shouldReturnBirthDateTimeAlongWithBirthdate() throws ParseException {
 		Person person = new Person();
 
-		person.setBirthdate(new SimpleDateFormat("yyyy-MM-dd").parse("2012-01-01"));
-		person.setBirthtime(new SimpleDateFormat("HH:mm:ss").parse("11:11:11"));
+		person.setBirthdate(Date.from(LocalDate.parse("2012-01-01").atStartOfDay(ZoneId.systemDefault()).toInstant()));
+		person.setBirthtime(Date.from(LocalTime.parse("11:11:11").atDate(LocalDate.of(1970, 1, 1))
+		        .atZone(ZoneId.systemDefault()).toInstant()));
 
-		assertEquals(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse("2012-01-01 11:11:11"), person.getBirthDateTime());
+		assertEquals(Date.from(LocalDateTime.parse("2012-01-01 11:11:11", DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+		        .atZone(ZoneId.systemDefault()).toInstant()), person.getBirthDateTime());
 	}
 
 	/**
@@ -670,7 +677,7 @@ public class PersonTest extends BaseContextSensitiveTest {
 	public void getBirthDateTime_shouldReturnNullIfBirthtimeIsNull() throws ParseException {
 		Person person = new Person();
 
-		person.setBirthdate(new SimpleDateFormat("yyyy-MM-dd").parse("2012-01-01"));
+		person.setBirthdate(Date.from(LocalDate.parse("2012-01-01").atStartOfDay(ZoneId.systemDefault()).toInstant()));
 		person.setBirthtime(null);
 		assertNull(person.getBirthDateTime());
 	}
@@ -812,7 +819,7 @@ public class PersonTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getAgeInMonths_shouldReturnCorrectAgeInMonths() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.MONTH, -12);
 		Person person = new Person();
 		person.setBirthdate(calendar.getTime());
@@ -821,7 +828,7 @@ public class PersonTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getAgeInWeeks_shouldReturnCorrectAgeInWeeks() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.WEEK_OF_MONTH, -4);
 		Person person = new Person();
 		person.setBirthdate(calendar.getTime());
@@ -830,7 +837,7 @@ public class PersonTest extends BaseContextSensitiveTest {
 
 	@Test
 	public void getAgeInDays_shouldReturnCorrectAgeInDays() {
-		Calendar calendar = Calendar.getInstance();
+		Calendar calendar = GregorianCalendar.from(ZonedDateTime.now());
 		calendar.add(Calendar.DAY_OF_MONTH, -11);
 		Person person = new Person();
 		person.setBirthdate(calendar.getTime());
@@ -873,9 +880,9 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAgeInMonths_shouldReturnCorrectAgeInMonthsWithGivenDate() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(2022, Calendar.JANUARY, 15);
-		Calendar onDate = Calendar.getInstance();
+		Calendar onDate = GregorianCalendar.from(ZonedDateTime.now());
 		onDate.set(2023, Calendar.MARCH, 15);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -887,9 +894,9 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAgeInWeeks_shouldReturnCorrectAgeInWeeksWithGivenDate() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(2025, Calendar.JANUARY, 1);
-		Calendar onDate = Calendar.getInstance();
+		Calendar onDate = GregorianCalendar.from(ZonedDateTime.now());
 		onDate.set(2025, Calendar.FEBRUARY, 1);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());
@@ -901,9 +908,9 @@ public class PersonTest extends BaseContextSensitiveTest {
 	 */
 	@Test
 	public void getAgeInDays_shouldReturnCorrectAgeInDaysWithGivenDate() {
-		Calendar birthdate = Calendar.getInstance();
+		Calendar birthdate = GregorianCalendar.from(ZonedDateTime.now());
 		birthdate.set(2025, Calendar.AUGUST, 1);
-		Calendar onDate = Calendar.getInstance();
+		Calendar onDate = GregorianCalendar.from(ZonedDateTime.now());
 		onDate.set(2025, Calendar.AUGUST, 16);
 		Person person = new Person();
 		person.setBirthdate(birthdate.getTime());

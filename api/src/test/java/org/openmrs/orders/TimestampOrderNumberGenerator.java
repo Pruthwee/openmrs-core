@@ -9,6 +9,8 @@
  */
 package org.openmrs.orders;
 
+import java.time.Instant;
+
 import org.apache.commons.lang3.StringUtils;
 import org.openmrs.api.OrderContext;
 import org.openmrs.api.OrderNumberGenerator;
@@ -32,7 +34,7 @@ public class TimestampOrderNumberGenerator implements OrderNumberGenerator {
 			nextOrderNumber = (String) orderContext.getAttribute(NEXT_ORDER_NUMBER);
 		}
 		if (StringUtils.isBlank(nextOrderNumber)) {
-			nextOrderNumber = ORDER_NUMBER_PREFIX + System.currentTimeMillis();
+			nextOrderNumber = ORDER_NUMBER_PREFIX + Instant.now().toEpochMilli();
 		}
 		return nextOrderNumber;
 	}

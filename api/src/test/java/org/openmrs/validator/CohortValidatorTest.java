@@ -9,7 +9,9 @@
  */
 package org.openmrs.validator;
 
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -129,9 +131,11 @@ public class CohortValidatorTest extends BaseContextSensitiveTest {
 	public void validate_shouldPassIfMembershipStartDateIsAfterEndDate() throws Exception {
 		Cohort cohort = new Cohort(2);
 		CohortMembership membership = new CohortMembership(patient.getPatientId());
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-		Date startDate = dateFormat.parse("2016-11-01 00:00:00");
-		Date endDate = dateFormat.parse("2015-01-01 00:00:00");
+		DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		Date startDate = Date.from(LocalDateTime.parse("2016-11-01 00:00:00", dateFormat).atZone(ZoneId.systemDefault())
+		        .toInstant());
+		Date endDate = Date.from(LocalDateTime.parse("2015-01-01 00:00:00", dateFormat).atZone(ZoneId.systemDefault())
+		        .toInstant());
 		membership.setStartDate(startDate);
 		membership.setEndDate(endDate);
 		Errors errors = new BindException(cohort, "cohort");

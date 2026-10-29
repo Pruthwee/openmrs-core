@@ -9,8 +9,10 @@
  */
 package org.openmrs.validator;
 
+import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -52,7 +54,7 @@ public class PersonValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailValidationIfBirthdateIsAFutureDate() {
 		Patient pa = new Patient(1);
-		Calendar birth = Calendar.getInstance();
+		Calendar birth = GregorianCalendar.from(ZonedDateTime.now());
 		birth.setTime(new Date());
 		birth.add(Calendar.YEAR, 20);
 		pa.setBirthdate(birth.getTime());
@@ -69,7 +71,7 @@ public class PersonValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailValidationIfDeathDateIsAFutureDate() {
 		Patient pa = new Patient(1);
-		Calendar death = Calendar.getInstance();
+		Calendar death = GregorianCalendar.from(ZonedDateTime.now());
 		death.setTime(new Date());
 		death.add(Calendar.YEAR, 20);
 		pa.setDeathDate(death.getTime());
@@ -85,7 +87,7 @@ public class PersonValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void validate_shouldFailValidationIfBirthdateMakesPatientOlderThat140YearsOld() {
 		Patient pa = new Patient(1);
-		Calendar birth = Calendar.getInstance();
+		Calendar birth = GregorianCalendar.from(ZonedDateTime.now());
 		birth.setTime(new Date());
 		birth.add(Calendar.YEAR, -145);
 		pa.setBirthdate(birth.getTime());
@@ -192,11 +194,11 @@ public class PersonValidatorTest extends BaseContextSensitiveTest {
 	@Test
 	public void shouldNotSetDeathBeforeBirth() {
 		Patient pa = new Patient(1);
-		Calendar birth = Calendar.getInstance();
+		Calendar birth = GregorianCalendar.from(ZonedDateTime.now());
 		birth.setTime(new Date());
 		birth.add(Calendar.YEAR, +5);
 		pa.setBirthdate(birth.getTime());
-		Calendar death = Calendar.getInstance();
+		Calendar death = GregorianCalendar.from(ZonedDateTime.now());
 		death.setTime(new Date());
 		pa.setDeathDate(death.getTime());
 
