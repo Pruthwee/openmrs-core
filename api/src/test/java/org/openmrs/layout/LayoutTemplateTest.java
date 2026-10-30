@@ -225,7 +225,7 @@ public class LayoutTemplateTest {
 
 	@Test
 	public void getLines_shouldOnlyEverPublishFullyBuiltLinesToConcurrentReaders() throws Exception {
-		int threads = 8;
+		int threads = Math.max(8, Runtime.getRuntime().availableProcessors());
 		List<List<String>> expected = projectLines(template.getLines());
 		template.setLineByLineFormat(template.getLineByLineFormat());
 

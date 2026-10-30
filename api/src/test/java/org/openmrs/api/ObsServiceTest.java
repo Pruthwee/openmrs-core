@@ -729,8 +729,8 @@ public class ObsServiceTest extends BaseContextSensitiveTest {
 
 			// sanity check, confirm the file exists
 			obs = os.getObs(obs.getObsId());
-			obsFile = new File(OpenmrsUtil.getApplicationDataDirectory() + File.separator + "storage" + File.separator
-			        + obs.getValueComplex().split("\\|")[1]);
+			obsFile = new File(new File(OpenmrsUtil.getApplicationDataDirectory(), "storage"),
+			        obs.getValueComplex().split("\\|")[1]);
 			assertTrue(obsFile.exists());
 
 			// now change the obs
@@ -743,8 +743,8 @@ public class ObsServiceTest extends BaseContextSensitiveTest {
 			updatedObs = os.saveObs(obs, "updating obs");
 
 			// confirm old file has been removed and new one exists
-			updatedObsFile = new File(OpenmrsUtil.getApplicationDataDirectory() + File.separator + "storage" + File.separator
-			        + updatedObs.getValueComplex().split("\\|")[1]);
+			updatedObsFile = new File(new File(OpenmrsUtil.getApplicationDataDirectory(), "storage"),
+			        updatedObs.getValueComplex().split("\\|")[1]);
 			assertTrue(updatedObsFile.exists());
 			assertFalse(obsFile.exists());
 

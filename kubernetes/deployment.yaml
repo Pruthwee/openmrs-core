@@ -1,0 +1,93 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openmrs-cont
+  namespace: openmrs-cont
+  labels:
+    app: openmrs-cont
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: openmrs-cont
+  template:
+    metadata:
+      labels:
+        app: openmrs-cont
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1001
+        runAsGroup: 0
+        fsGroup: 0
+      terminationGracePeriodSeconds: 60
+      containers:
+        - name: openmrs-cont
+          image: "{{IMAGE_URI}}"
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: OMRS_DB
+              value: "{{OMRS_DB}}"
+            - name: OMRS_DB_HOSTNAME
+              value: "{{OMRS_DB_HOSTNAME}}"
+            - name: OMRS_DB_PORT
+              value: "{{OMRS_DB_PORT}}"
+            - name: OMRS_DB_NAME
+              value: "{{OMRS_DB_NAME}}"
+            - name: OMRS_DB_USERNAME
+              value: "{{OMRS_DB_USERNAME}}"
+            - name: OMRS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: openmrs-cont-secrets
+                  key: OMRS_DB_PASSWORD
+            - name: OMRS_ADMIN_USER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: openmrs-cont-secrets
+                  key: OMRS_ADMIN_USER_PASSWORD
+            - name: OMRS_ADMIN_PASSWORD_LOCKED
+              value: "{{OMRS_ADMIN_PASSWORD_LOCKED}}"
+            - name: OMRS_CREATE_TABLES
+              value: "{{OMRS_CREATE_TABLES}}"
+            - name: OMRS_AUTO_UPDATE_DATABASE
+              value: "{{OMRS_AUTO_UPDATE_DATABASE}}"
+            - name: OMRS_SEARCH
+              value: "{{OMRS_SEARCH}}"
+            - name: OMRS_SEARCH_ES_URIS
+              value: "{{OMRS_SEARCH_ES_URIS}}"
+            - name: TZ
+              value: "UTC"
+          resources:
+            requests:
+              cpu: "250m"
+              memory: "512Mi"
+            limits:
+              cpu: "500m"
+              memory: "1Gi"
+          livenessProbe:
+            httpGet:
+              path: /openmrs/health/alive
+              port: 8080
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /openmrs/health/started
+              port: 8080
+            initialDelaySeconds: 90
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 20
+          volumeMounts:
+            - name: openmrs-data
+              mountPath: /openmrs/data
+      volumes:
+        - name: openmrs-data
+          emptyDir: {}

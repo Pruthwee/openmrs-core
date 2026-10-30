@@ -58,7 +58,8 @@ import static org.openmrs.util.XmlUtils.createDocumentBuilder;
  */
 public class WebModuleUtilTest {
 
-	private static final String REAL_PATH = "/usr/local/apache-tomcat-7.0.27/webapps/openmrs";
+	private static final String REAL_PATH = System.getenv().getOrDefault("TEST_WEBAPP_REAL_PATH",
+	        "/usr/local/apache-tomcat-7.0.27/webapps/openmrs");
 
 	@AfterEach
 	public void tearDown() {

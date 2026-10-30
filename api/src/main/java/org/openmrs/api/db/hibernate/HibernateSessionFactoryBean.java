@@ -9,6 +9,7 @@
  */
 package org.openmrs.api.db.hibernate;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -157,7 +158,11 @@ public class HibernateSessionFactoryBean extends LocalSessionFactoryBean impleme
 
 		// load in the default hibernate properties
 		try {
-			InputStream propertyStream = getClass().getResourceAsStream("/hibernate.default.properties");
+			// the file can be supplied from outside the image (e.g. a Kubernetes ConfigMap mounted as a file)
+			String defaultPropertiesFile = System.getenv("OMRS_HIBERNATE_DEFAULT_PROPERTIES_FILE");
+			InputStream propertyStream = (defaultPropertiesFile != null && !defaultPropertiesFile.isBlank())
+			        ? new FileInputStream(defaultPropertiesFile)
+			        : getClass().getResourceAsStream("/hibernate.default.properties");
 			Properties props = new Properties();
 
 			OpenmrsUtil.loadProperties(props, propertyStream);

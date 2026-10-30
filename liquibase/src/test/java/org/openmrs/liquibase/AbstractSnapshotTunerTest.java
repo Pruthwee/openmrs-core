@@ -53,18 +53,18 @@ public class AbstractSnapshotTunerTest {
 	@Test
 	public void shouldFindOpenMRSHeaderInFile() throws FileNotFoundException {
 		assertTrue(
-		    schemaOnlyTuner.isLicenseHeaderInFile(PATH_TO_TEST_RESOURCES + File.separator + FILE_WITH_LICENSE_HEADER_MD));
+		    schemaOnlyTuner.isLicenseHeaderInFile(Paths.get(PATH_TO_TEST_RESOURCES, FILE_WITH_LICENSE_HEADER_MD).toString()));
 	}
 
 	@Test
 	public void shouldDetectMissingOpenMRSHeaderInFile() throws FileNotFoundException {
 		assertFalse(
-		    schemaOnlyTuner.isLicenseHeaderInFile(PATH_TO_TEST_RESOURCES + File.separator + FILE_WITHOUT_LICENSE_HEADER_MD));
+		    schemaOnlyTuner.isLicenseHeaderInFile(Paths.get(PATH_TO_TEST_RESOURCES, FILE_WITHOUT_LICENSE_HEADER_MD).toString()));
 	}
 
 	@Test
 	public void shouldReadFile() throws IOException {
-		assertTrue(readFile(PATH_TO_TEST_RESOURCES + File.separator + FILE_WITH_LICENSE_HEADER_MD)
+		assertTrue(readFile(Paths.get(PATH_TO_TEST_RESOURCES, FILE_WITH_LICENSE_HEADER_MD).toString())
 		        .contains(HTTP_OPENMRS_ORG_LICENSE));
 	}
 
@@ -90,7 +90,7 @@ public class AbstractSnapshotTunerTest {
 	@Test
 	public void shouldCreateUpdatedChangeLogFile(@TempDir Path tempDir) throws IOException {
 		// given
-		Path sourcePath = Paths.get(PATH_TO_TEST_RESOURCES + File.separator + FILE_WITHOUT_LICENSE_HEADER_MD);
+		Path sourcePath = Paths.get(PATH_TO_TEST_RESOURCES, FILE_WITHOUT_LICENSE_HEADER_MD);
 		Path targetPath = tempDir.resolve("file-to-add-license-header-to.txt");
 
 		Files.copy(sourcePath, targetPath, REPLACE_EXISTING);

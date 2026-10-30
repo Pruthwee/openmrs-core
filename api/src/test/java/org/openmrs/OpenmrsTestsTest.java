@@ -190,7 +190,7 @@ public class OpenmrsTestsTest {
 				String className = currentFile.getAbsolutePath().replace(".class", "");
 
 				// switch to dot separation
-				className = className.replace(File.separator, ".");
+				className = className.replace("/", ".").replace("\\", ".");
 
 				// strip out the beginning (/home/ben/workspace...) up to org.openmrs.
 				className = className.substring(className.lastIndexOf("org.openmrs."));

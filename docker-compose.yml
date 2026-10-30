@@ -1,58 +1,40 @@
-version: "3.7"
-
 #    This Source Code Form is subject to the terms of the Mozilla Public License,
 #    v. 2.0. If a copy of the MPL was not distributed with this file, You can
 #    obtain one at http://mozilla.org/MPL/2.0/. OpenMRS is also distributed under
 #    the terms of the Healthcare Disclaimer located at http://openmrs.org/license.
-#    
+#
 #    Copyright (C) OpenMRS Inc. OpenMRS is a registered trademark and the OpenMRS
 #    graphic logo is a trademark of OpenMRS Inc.
 
+# Only the application's own container. The database (and Elasticsearch, if used) are external services
+# reached through the environment variables below. Run it with:
+#   docker compose -f docker-compose.yml up --build
+# (the -f keeps the developer-only docker-compose.override.yml out of the merge).
 services:
-    db:
-        image: mariadb:10.11.7
-        command: "mariadbd --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci"
-        environment:
-            MARIADB_DATABASE: ${OMRS_DB_NAME:-openmrs}
-            MARIADB_USER: ${OMRS_DB_USER:-openmrs}
-            MARIADB_PASSWORD: ${OMRS_DB_PASSWORD:-openmrs}
-            MARIADB_ROOT_PASSWORD: ${OMRS_DB_ROOT_PASSWORD:-openmrs}
-        healthcheck:
-            test: "mariadb --user=${OMRS_DB_USER:-openmrs} --password=${OMRS_DB_PASSWORD:-openmrs} --execute \"SHOW DATABASES;\""
-            interval: 3s
-            timeout: 5s
-            retries: 3
-        volumes:
-            - db-data:/var/lib/mysql
-
-    api:
-        image: openmrs/openmrs-core:${TAG:-nightly}
-        depends_on:
-            - db
+    openmrs-cont:
+        image: openmrs-cont:${TAG:-latest}
         build:
             context: .
-            cache_from:
-                - openmrs/openmrs-core:${TAG:-dev}
-                - openmrs/openmrs-core:${TAG:-nightly}
+            dockerfile: Dockerfile
         ports:
             - "8080:8080"
         environment:
             OMRS_DB: ${OMRS_DB:-mariadb}
-            OMRS_DB_HOSTNAME: ${OMRS_DB_HOSTNAME:-db}
+            OMRS_DB_HOSTNAME: ${OMRS_DB_HOSTNAME:?set OMRS_DB_HOSTNAME}
+            OMRS_DB_PORT: ${OMRS_DB_PORT:-3306}
             OMRS_DB_NAME: ${OMRS_DB_NAME:-openmrs}
             OMRS_DB_USERNAME: ${OMRS_DB_USERNAME:-openmrs}
-            OMRS_DB_PASSWORD: ${OMRS_DB_PASSWORD:-openmrs}
-            OMRS_ADMIN_USER_PASSWORD: ${OMRS_ADMIN_USER_PASSWORD:-Admin123}
+            OMRS_DB_PASSWORD: ${OMRS_DB_PASSWORD:?set OMRS_DB_PASSWORD}
+            OMRS_ADMIN_USER_PASSWORD: ${OMRS_ADMIN_USER_PASSWORD:?set OMRS_ADMIN_USER_PASSWORD}
             OMRS_ADMIN_PASSWORD_LOCKED: ${OMRS_ADMIN_PASSWORD_LOCKED:-true}
-        healthcheck:
-            test: ["CMD", "curl", "-f", "http://localhost:8080/openmrs/health/alive"]
-            interval: 5s
-            timeout: 5s
-            retries: 3
-            start_period: 1m
+            OMRS_CREATE_TABLES: ${OMRS_CREATE_TABLES:-true}
+            OMRS_AUTO_UPDATE_DATABASE: ${OMRS_AUTO_UPDATE_DATABASE:-true}
+            OMRS_SEARCH: ${OMRS_SEARCH:-lucene}
+            OMRS_SEARCH_ES_URIS: ${OMRS_SEARCH_ES_URIS:-http://elasticsearch:9200}
+            OMRS_JAVA_MEMORY_OPTS: ${OMRS_JAVA_MEMORY_OPTS:--XX:NewSize=128m -Xmx512m -Xms256m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0}
+            TZ: UTC
         volumes:
-            - openmrs-data:/openmrs/data/
+            - openmrs-data:/openmrs/data
 
 volumes:
-    db-data:
     openmrs-data:

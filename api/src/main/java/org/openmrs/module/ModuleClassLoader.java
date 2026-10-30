@@ -20,6 +20,7 @@ import java.net.URLStreamHandlerFactory;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
@@ -129,12 +130,16 @@ public class ModuleClassLoader extends URLClassLoader {
 	private void addClassFilePackages(Collection<File> files, int dirLength) {
 		for (File file : files) {
 			String name = file.getAbsolutePath().substring(dirLength);
-			Integer indexOfLastSlash = name.lastIndexOf(File.separator);
-			if (indexOfLastSlash > 0) {
-				String packageName = name.substring(0, indexOfLastSlash);
-				packageName = packageName.replace(File.separator, ".");
-				providedPackages.add(packageName);
-
+			Path parent = Paths.get(name).getParent();
+			if (parent != null && parent.getNameCount() > 0) {
+				StringBuilder packageName = new StringBuilder();
+				for (Path element : parent) {
+					if (packageName.length() > 0) {
+						packageName.append('.');
+					}
+					packageName.append(element.toString());
+				}
+				providedPackages.add(packageName.toString());
 			}
 		}
 	}

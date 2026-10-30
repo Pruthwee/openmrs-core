@@ -170,7 +170,7 @@ public class MigrateDataSet {
 
 		String[] cmds = new String[] { "/bin/sh", "-c", shellCommand };
 
-		File wd = new File("/tmp");
+		File wd = new File(System.getenv().getOrDefault("TEST_TMP_DIR", "/tmp"));
 
 		StringBuilder out = new StringBuilder();
 

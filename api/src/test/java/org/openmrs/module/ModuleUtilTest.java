@@ -805,7 +805,7 @@ public class ModuleUtilTest extends BaseContextSensitiveTest {
 	@Test
 	public void getPackagesFromFile_shouldSkipOptionalFoldersIfJarFile() throws IOException {
 		File f = new File(this.getClass().getResource("/org/openmrs/module/include/test1-1.0-SNAPSHOT.omod").getFile());
-		File d = new File("/tmp/test1-1.0-SNAPSHOT.jar");
+		File d = new File(System.getenv().getOrDefault("TEST_TMP_DIR", "/tmp"), "test1-1.0-SNAPSHOT.jar");
 		FileUtils.copyFile(f, d);
 		Collection<String> packageCollection = ModuleUtil.getPackagesFromFile(d);
 

@@ -9,7 +9,6 @@
  */
 package org.openmrs.liquibase;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -68,7 +67,7 @@ public class CoreDataTunerTest {
 	@Test
 	public void shouldCreateUpdatedChangeLogFile(@TempDir Path tempDir) throws DocumentException, IOException, SAXException {
 		// given
-		String sourcePath = PATH_TO_TEST_RESOURCES + File.separator + LIQUIBASE_CORE_DATA_SNAPSHOT_XML;
+		String sourcePath = Paths.get(PATH_TO_TEST_RESOURCES, LIQUIBASE_CORE_DATA_SNAPSHOT_XML).toString();
 		String targetPath = tempDir.resolve("liquibase-core-data-UPDATED-SNAPSHOT.xml").toString();
 
 		// when

@@ -73,7 +73,7 @@ public class UuidUtilTest {
 	 */
 	@Test
 	public void newUuidString_shouldNotRepeatItselfWhenCalledFromMultipleThreads() throws Exception {
-		int threads = 8;
+		int threads = Math.max(8, Runtime.getRuntime().availableProcessors());
 		int perThread = 25000;
 		ExecutorService executor = Executors.newFixedThreadPool(threads);
 

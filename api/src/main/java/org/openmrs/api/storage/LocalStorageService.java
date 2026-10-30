@@ -120,17 +120,23 @@ public class LocalStorageService extends BaseStorageService implements StorageSe
 		Stream<Path> stream = Files.list(searchDir);
 		// Filter out files that start with dot (hidden files)
 		return stream.filter(path -> !path.getFileName().toString().startsWith(".")).map(path -> {
-			String foundKey = storageDir.relativize(path).toString();
+			// join the path elements with '/' so that keys are the same on every platform
+			StringBuilder relativeKey = new StringBuilder();
+			for (Path element : storageDir.relativize(path)) {
+				if (relativeKey.length() > 0) {
+					relativeKey.append('/');
+				}
+				relativeKey.append(element.toString());
+			}
+			String foundKey = relativeKey.toString();
 			foundKey = decodeKey(foundKey);
-			foundKey += (Files.isDirectory(path)) ? File.separator : "";
-			foundKey = foundKey.replace(File.separatorChar, '/'); //MS Windows support
+			foundKey += (Files.isDirectory(path)) ? "/" : "";
 			return foundKey;
 		}).filter(foundKey -> foundKey.startsWith(key));
 	}
 
 	Path newPath(String key) throws IOException {
 		key = encodeKey(key);
-		key = key.replace('/', File.separatorChar);
 		Path newPath = storageDir.resolve(key);
 		assertKeyInStorageDir(newPath, key);
 

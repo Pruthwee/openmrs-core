@@ -16,6 +16,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -131,7 +132,7 @@ public class WebModuleUtil {
 				realPath = System.getProperty("user.dir");
 			}
 
-			File webInf = new File(realPath + "/WEB-INF".replace("/", File.separator));
+			File webInf = new File(realPath + "/WEB-INF");
 			if (!webInf.exists()) {
 				webInf.mkdir();
 			}
@@ -176,7 +177,7 @@ public class WebModuleUtil {
 						log.debug("Moving file from: {} to {}", name, absPath);
 
 						// get the output file
-						File outFile = new File(absPath.toString().replace("/", File.separator));
+						File outFile = new File(absPath.toString());
 						if (!outFile.toPath().normalize().startsWith(webInf.toPath().normalize())) {
 							throw new UnsupportedOperationException("Attempted to write file '" + name
 							        + "' rejected as it attempts to write outside the WEB-INF directory. This may be the result of a zip-slip style attack.");
@@ -240,7 +241,7 @@ public class WebModuleUtil {
 				if (root.getElementsByTagName("dwr").getLength() > 0) {
 
 					// get the dwr-module.xml file that we're appending our code to
-					File f = new File(realPath + "/WEB-INF/dwr-modules.xml".replace("/", File.separator));
+					File f = new File(realPath + "/WEB-INF/dwr-modules.xml");
 
 					// testing if file exists
 					if (!f.exists()) {
@@ -286,7 +287,7 @@ public class WebModuleUtil {
 			// mark to delete the entire module web directory on exit
 			// this will usually only be used when an improper shutdown has occurred.
 			String folderPath = realPath + "/WEB-INF/view/module/" + mod.getModuleIdAsPath();
-			File outFile = new File(folderPath.replace("/", File.separator));
+			File outFile = new File(folderPath);
 			outFile.deleteOnExit();
 
 			// additional checks on module needing a context refresh
@@ -757,7 +758,7 @@ public class WebModuleUtil {
 
 		// clear the module messages
 		String messagesPath = realPath + "/WEB-INF/";
-		File folder = new File(messagesPath.replace("/", File.separator));
+		File folder = new File(messagesPath);
 
 		File[] files = folder.listFiles();
 		if (folder.exists() && files != null) {
@@ -809,7 +810,7 @@ public class WebModuleUtil {
 
 		// delete the web files from the webapp
 		String absPath = realPath + "/WEB-INF/view/module/" + moduleId;
-		File moduleWebFolder = new File(absPath.replace("/", File.separator));
+		File moduleWebFolder = new File(absPath);
 		if (moduleWebFolder.exists()) {
 			try {
 				OpenmrsUtil.deleteDirectory(moduleWebFolder);
@@ -838,7 +839,7 @@ public class WebModuleUtil {
 			if (root.getElementsByTagName("dwr").getLength() > 0) {
 
 				// get the dwr-module.xml file that we're appending our code to
-				File f = new File(realPath + "/WEB-INF/dwr-modules.xml".replace("/", File.separator));
+				File f = new File(realPath + "/WEB-INF/dwr-modules.xml");
 
 				// testing if file exists
 				if (!f.exists()) {
@@ -984,7 +985,7 @@ public class WebModuleUtil {
 		String moduleWebFolder;
 
 		//RealPath may contain '/' on Windows when running tests with the mocked servlet context
-		if (realPath.endsWith(File.separator) || realPath.endsWith("/")) {
+		if (realPath.endsWith("/")) {
 			moduleWebFolder = realPath + moduleFolder;
 		} else {
 			moduleWebFolder = realPath + "/" + moduleFolder;
@@ -992,7 +993,7 @@ public class WebModuleUtil {
 
 		moduleWebFolder += moduleId;
 
-		return moduleWebFolder.replace("/", File.separator);
+		return Paths.get(moduleWebFolder).toString();
 	}
 
 	public static void createDwrModulesXml(String realPath) {
@@ -1012,7 +1013,7 @@ public class WebModuleUtil {
 			transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, "http://directwebremoting.org/schema/dwr20.dtd");
 			DOMSource source = new DOMSource(doc);
 			StreamResult result = new StreamResult(
-			        new File(realPath + "/WEB-INF/dwr-modules.xml".replace("/", File.separator)));
+			        new File(realPath + "/WEB-INF/dwr-modules.xml"));
 
 			transformer.transform(source, result);
 

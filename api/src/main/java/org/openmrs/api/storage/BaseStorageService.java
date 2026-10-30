@@ -9,7 +9,6 @@
  */
 package org.openmrs.api.storage;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -86,7 +85,7 @@ public abstract class BaseStorageService extends BaseOpenmrsService implements S
 			keySuffix = LocalDateTime.now().format(keyDateTimeFormat) + RandomStringUtils.insecure().nextAlphanumeric(8);
 		}
 		if (filename != null) {
-			keySuffix += '-' + filename.replace(File.separator, "");
+			keySuffix += '-' + filename.replace("/", "");
 		}
 
 		if (moduleIdOrGroup == null) {
